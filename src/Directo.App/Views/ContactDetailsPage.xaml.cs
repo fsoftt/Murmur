@@ -1,3 +1,4 @@
+using Directo.App.Graphics;
 using Directo.App.Services;
 using Directo.Presentation.ViewModels;
 
@@ -11,6 +12,15 @@ public partial class ContactDetailsPage : ContentPage, IQueryAttributable
     {
         InitializeComponent();
         BindingContext = _viewModel = viewModel;
+        _viewModel.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(ContactDetailsViewModel.IsVerified))
+            {
+                ShowVerification();
+            }
+        };
+        Application.Current!.RequestedThemeChanged += (_, _) => ShowVerification();
+        ShowVerification();
     }
 
     public async void ApplyQueryAttributes(IDictionary<string, object> query)
@@ -21,11 +31,25 @@ public partial class ContactDetailsPage : ContentPage, IQueryAttributable
         }
     }
 
-    private async void OnVerifiedToggled(object? sender, ToggledEventArgs e)
+    private void ShowVerification()
     {
-        if (e.Value != _viewModel.IsVerified)
+        var verified = _viewModel.IsVerified;
+        BadgeText.Text = verified ? "Identidad verificada" : "Sin verificar";
+        var ink = Theme.Get(verified ? "OnlineText" : "Amber");
+        BadgeText.TextColor = ink;
+        BadgeIcon.Stroke = ink;
+        Badge.BackgroundColor = Theme.Get(verified ? "OnlineSoft" : "AmberSoft");
+        VerifyButton.Text = verified ? "Marcar como no verificado" : "He comprobado que coincide";
+        VerifyButton.Style = verified ? (Style)Application.Current!.Resources["SecondaryButton"] : null;
+    }
+
+    private async void OnVerifyClicked(object? sender, EventArgs e)
+    {
+        var verify = !_viewModel.IsVerified;
+        await _viewModel.SetVerifiedCommand.ExecuteAsync(verify);
+        if (verify)
         {
-            await _viewModel.SetVerifiedCommand.ExecuteAsync(e.Value);
+            HapticFeedback.Default.Perform(HapticFeedbackType.Click);
         }
     }
 
@@ -37,12 +61,16 @@ public partial class ContactDetailsPage : ContentPage, IQueryAttributable
         }
     }
 
+    private async void OnNameUnfocused(object? sender, FocusEventArgs e) => await _viewModel.SaveNameCommand.ExecuteAsync(null);
+
+    private async void OnBackTapped(object? sender, TappedEventArgs e) => await Shell.Current.GoToAsync("..");
+
     private async void OnClearClicked(object? sender, EventArgs e)
     {
         // Be honest about what deletion can and cannot do (architecture §24).
         if (await DisplayAlertAsync(
             "Borrar historial",
-            "Se borrarán los mensajes de este dispositivo, incluidos los pendientes de entregar. La otra persona conserva su copia.",
+            "Se borrarán los mensajes de este teléfono, incluidos los pendientes de entregar. La otra persona conserva su copia.",
             "Borrar",
             "Cancelar"))
         {
@@ -54,7 +82,7 @@ public partial class ContactDetailsPage : ContentPage, IQueryAttributable
     {
         if (await DisplayAlertAsync(
             "Eliminar contacto",
-            "Se eliminará el contacto y el historial de este dispositivo. Para volver a hablar tendréis que emparejaros de nuevo.",
+            "Se eliminará el contacto y el historial de este teléfono. Para volver a hablar tendréis que emparejaros de nuevo.",
             "Eliminar",
             "Cancelar"))
         {

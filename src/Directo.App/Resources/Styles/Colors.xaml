@@ -1,10 +1,47 @@
 <?xml version="1.0" encoding="UTF-8" ?>
+<!-- Design tokens ("Midnight signal"): one Light and one Dark value per role.
+     Text colors keep 4.5:1 contrast on their backgrounds in both themes. -->
 <ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
-    <Color x:Key="Primary">#1F6FEB</Color>
-    <Color x:Key="Danger">#CF222E</Color>
-    <Color x:Key="MutedText">#6E7781</Color>
-    <Color x:Key="BannerBackground">#FFF8C5</Color>
-    <Color x:Key="OutgoingBubble">#DDF4FF</Color>
-    <Color x:Key="IncomingBubble">#F6F8FA</Color>
+    <Color x:Key="Accent">#2563EB</Color>
+    <Color x:Key="OnAccent">#FFFFFF</Color>
+    <Color x:Key="OnlineDot">#34D399</Color>
+    <Color x:Key="ConnectingDot">#60A5FA</Color>
+    <Color x:Key="OfflineDot">#64748B</Color>
+
+    <Color x:Key="BgLight">#F4F6FA</Color>
+    <Color x:Key="BgDark">#0B0F17</Color>
+    <Color x:Key="HeaderLight">#FFFFFF</Color>
+    <Color x:Key="HeaderDark">#0E131D</Color>
+    <Color x:Key="SurfaceLight">#FFFFFF</Color>
+    <Color x:Key="SurfaceDark">#131A26</Color>
+    <Color x:Key="Surface2Light">#EEF2F8</Color>
+    <Color x:Key="Surface2Dark">#1B2433</Color>
+    <Color x:Key="BorderLight">#DDE3EC</Color>
+    <Color x:Key="BorderDark">#263043</Color>
+    <Color x:Key="TextLight">#0E1726</Color>
+    <Color x:Key="TextDark">#E8EDF5</Color>
+    <Color x:Key="MutedLight">#556175</Color>
+    <Color x:Key="MutedDark">#94A2B8</Color>
+    <Color x:Key="LinkLight">#1D4ED8</Color>
+    <Color x:Key="LinkDark">#7DB3FF</Color>
+    <Color x:Key="OnlineTextLight">#047857</Color>
+    <Color x:Key="OnlineTextDark">#34D399</Color>
+    <Color x:Key="AmberLight">#B45309</Color>
+    <Color x:Key="AmberDark">#FBBF24</Color>
+    <Color x:Key="AmberSoftLight">#FEF3C7</Color>
+    <Color x:Key="AmberSoftDark">#3A2E12</Color>
+    <Color x:Key="OnlineSoftLight">#D1FAE5</Color>
+    <Color x:Key="OnlineSoftDark">#123227</Color>
+    <Color x:Key="DangerLight">#B91C1C</Color>
+    <Color x:Key="DangerDark">#FCA5A5</Color>
+    <Color x:Key="DangerSoftLight">#FDECEC</Color>
+    <Color x:Key="DangerSoftDark">#3A1A1D</Color>
+    <Color x:Key="IncomingBubbleLight">#FFFFFF</Color>
+    <Color x:Key="IncomingBubbleDark">#1B2433</Color>
+    <Color x:Key="PendingBubbleLight">#DCE7FD</Color>
+    <Color x:Key="PendingBubbleDark">#1E3A8A</Color>
+    <Color x:Key="PendingBubbleTextLight">#1E3A8A</Color>
+    <Color x:Key="PendingBubbleTextDark">#FFFFFF</Color>
+    <Color x:Key="ScannerBg">#05070B</Color>
 </ResourceDictionary>

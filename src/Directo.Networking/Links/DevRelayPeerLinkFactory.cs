@@ -100,6 +100,13 @@ public sealed class DevRelayPeerLinkFactory : IPeerLinkFactory
                 await _offerArrived.WaitAsync(cancellationToken).ConfigureAwait(false);
             }
 
+            // Older offers belong to attempts the initiator may already have abandoned after a
+            // timeout; answering one of those would leave both sides waiting. Take the newest.
+            while (_offers.TryDequeue(out var newer))
+            {
+                offer = newer;
+            }
+
             _linkId = offer;
             await SendFrameAsync(FrameType.Accept, ReadOnlyMemory<byte>.Empty, cancellationToken).ConfigureAwait(false);
         }

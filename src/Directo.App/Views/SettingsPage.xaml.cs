@@ -34,4 +34,6 @@ public partial class SettingsPage : ContentPage
         _settings.SignalingEndpoint = new Uri(text);
         await DisplayAlertAsync("Guardado", "Reinicia la app para usar el nuevo servidor.", "Aceptar");
     }
+
+    private async void OnBackTapped(object? sender, TappedEventArgs e) => await Shell.Current.GoToAsync("..");
 }

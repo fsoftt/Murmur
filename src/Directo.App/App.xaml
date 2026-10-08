@@ -10,8 +10,11 @@
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <converters:IsNotNullConverter x:Key="IsNotNull" />
+            <converters:InvertBoolConverter x:Key="Not" />
             <converters:BoolToAlignmentConverter x:Key="OutgoingAlignment" />
-            <converters:BoolToBubbleColorConverter x:Key="BubbleColor" />
+            <converters:HexToColorConverter x:Key="HexColor" />
+            <converters:BubbleShapeConverter x:Key="BubbleShape" />
+            <converters:TopMarginConverter x:Key="TopMargin" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Directo.Presentation.ViewModels;assembly=Directo.Presentation"
+             xmlns:g="clr-namespace:Directo.App.Graphics"
+             x:Class="Directo.App.Views.PairedPage"
+             x:DataType="vm:PairedViewModel"
+             Title="Emparejados">
+    <Grid RowDefinitions="*,Auto" Padding="24,40,24,32">
+        <VerticalStackLayout VerticalOptions="Center" Spacing="28">
+            <Grid HeightRequest="130" WidthRequest="220" HorizontalOptions="Center">
+                <Ellipse x:Name="Ring" WidthRequest="120" HeightRequest="120" Stroke="{StaticResource OnlineDot}" StrokeThickness="2" />
+                <HorizontalStackLayout x:Name="Avatars" HorizontalOptions="Center" VerticalOptions="Center" Spacing="-18">
+                    <Border WidthRequest="84" HeightRequest="84" BackgroundColor="{StaticResource Accent}" StrokeShape="RoundRectangle 28" StrokeThickness="4"
+                            Stroke="{AppThemeBinding Light={StaticResource BgLight}, Dark={StaticResource BgDark}}">
+                        <Label Text="{Binding MyInitials}" Style="{StaticResource Initials}" FontSize="26" />
+                    </Border>
+                    <Border WidthRequest="84" HeightRequest="84" StrokeShape="RoundRectangle 28" StrokeThickness="4"
+                            BackgroundColor="{Binding AvatarColor, Converter={StaticResource HexColor}}"
+                            Stroke="{AppThemeBinding Light={StaticResource BgLight}, Dark={StaticResource BgDark}}">
+                        <Label Text="{Binding Initials}" Style="{StaticResource Initials}" FontSize="26" />
+                    </Border>
+                </HorizontalStackLayout>
+                <Border WidthRequest="38" HeightRequest="38" VerticalOptions="End" BackgroundColor="{StaticResource OnlineDot}" StrokeShape="RoundRectangle 19" StrokeThickness="4"
+                        Stroke="{AppThemeBinding Light={StaticResource BgLight}, Dark={StaticResource BgDark}}">
+                    <g:Icon Size="18" Stroke="#052E1F" StrokeThickness="3" Data="M5 12.5l4.5 4.5L19 7.5" />
+                </Border>
+            </Grid>
+
+            <VerticalStackLayout Spacing="10">
+                <Label Text="Emparejados" Style="{StaticResource Display}" FontSize="34" HorizontalTextAlignment="Center" />
+                <Label Style="{StaticResource Muted}" FontSize="16" HorizontalTextAlignment="Center"
+                       Text="{Binding DisplayName, StringFormat='{0} ya está en tus contactos y tú en los suyos. Nadie más guarda esta relación.'}" />
+            </VerticalStackLayout>
+
+            <Border Style="{StaticResource Card}" StrokeShape="RoundRectangle 20">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                    <g:Icon VerticalOptions="Start" Stroke="{AppThemeBinding Light={StaticResource AmberLight}, Dark={StaticResource AmberDark}}"
+                            Data="M12 3l7 3v6c0 4.5-3 7.8-7 9-4-1.2-7-4.5-7-9V6z M12 9v4 M12 16h.01" />
+                    <VerticalStackLayout Grid.Column="1" Spacing="4">
+                        <Label Text="Último paso: comparad el código de seguridad" Style="{StaticResource Strong}" FontSize="15" />
+                        <Label Text="Si alguien vio tu QR y se adelantó, el código no coincidirá." Style="{StaticResource Muted}" FontSize="13" />
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
+        </VerticalStackLayout>
+
+        <VerticalStackLayout Grid.Row="1" Spacing="10">
+            <Button Text="{Binding DisplayName, StringFormat='Escribir a {0}'}" Command="{Binding OpenChatCommand}" HeightRequest="56" />
+            <Button Text="Comparar código de seguridad" Command="{Binding CompareCodeCommand}" Style="{StaticResource SecondaryButton}" />
+        </VerticalStackLayout>
+    </Grid>
+</ContentPage>

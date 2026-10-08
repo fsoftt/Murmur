@@ -10,9 +10,23 @@ using Directo.Presentation.Services;
 
 namespace Directo.Presentation.ViewModels;
 
-public sealed record ConversationListItem(ContactId ContactId, string DisplayName, string? Preview, string ConnectionStatus, int PendingCount)
+public sealed record ConversationListItem(
+    ContactId ContactId,
+    string DisplayName,
+    string? Preview,
+    string ConnectionStatus,
+    int PendingCount,
+    string Initials,
+    string AvatarColor,
+    PresenceKind Presence,
+    bool IsVerified,
+    string ActivityTime)
 {
     public bool HasPending => PendingCount > 0;
+
+    public bool IsOnline => Presence == PresenceKind.Online;
+
+    public bool IsConnecting => Presence == PresenceKind.Connecting;
 }
 
 /// <summary>Home screen: conversations with their state, plus entry points to pair new contacts.</summary>
@@ -49,15 +63,28 @@ public sealed partial class ContactsViewModel : ViewModelBase, IDisposable
     public Task LoadAsync() => RunAsync(async () =>
     {
         var summaries = await _client.ListConversationsAsync();
+        var contacts = (await _client.Contacts.ListAsync()).ToDictionary(c => c.Id);
+        var now = DateTimeOffset.Now;
         Conversations.Clear();
         foreach (var summary in summaries)
         {
+            if (!contacts.TryGetValue(summary.ContactId, out var contact))
+            {
+                continue;
+            }
+
+            var state = _client.GetConnectionState(summary.ContactId);
             Conversations.Add(new ConversationListItem(
                 summary.ContactId,
                 summary.DisplayName,
-                summary.LastMessagePreview,
-                UserMessages.ForConnection(_client.GetConnectionState(summary.ContactId)),
-                summary.PendingCount));
+                summary.LastMessagePreview ?? (contact.Verification == VerificationState.Verified ? "Sin mensajes todavía" : "Emparejados · compara el código de seguridad"),
+                contact.IsBlocked ? "Bloqueado" : UserMessages.ForConnection(state),
+                summary.PendingCount,
+                Avatars.Initials(summary.DisplayName),
+                Avatars.ColorFor(contact.Identity.IdentityKey),
+                UserMessages.ForPresence(state),
+                contact.Verification == VerificationState.Verified,
+                UserMessages.ForActivity(summary.LastActivityAt, now)));
         }
 
         IsEmpty = Conversations.Count == 0;

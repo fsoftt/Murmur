@@ -9,12 +9,16 @@ public sealed class ShellNavigator : INavigator
     public const string ContactRoute = "contact";
     public const string InviteRoute = "invite";
     public const string ScanRoute = "scan";
+    public const string PairedRoute = "paired";
     public const string SettingsRoute = "settings";
     public const string ContactIdParameter = "contactId";
 
     public Task OpenChatAsync(ContactId contactId) => Go($"//contacts/{ChatRoute}?{ContactIdParameter}={contactId}");
 
     public Task OpenContactDetailsAsync(ContactId contactId) => Go($"{ContactRoute}?{ContactIdParameter}={contactId}");
+
+    // Replaces the invite or scanner page, so "back" from the celebration returns home.
+    public Task OpenPairedAsync(ContactId contactId) => Go($"//contacts/{PairedRoute}?{ContactIdParameter}={contactId}");
 
     public Task OpenInviteAsync() => Go(InviteRoute);
 

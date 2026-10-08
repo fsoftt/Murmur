@@ -1,11 +1,12 @@
 using Directo.Domain.Model;
 using Directo.IntegrationTests.Support;
 using Directo.Networking.Links;
+using Xunit.Abstractions;
 
 namespace Directo.IntegrationTests;
 
 /// <summary>The development-only transport used to try the app on devices before WebRTC exists.</summary>
-public sealed class DevRelayTests(SignalingServerFixture server) : IClassFixture<SignalingServerFixture>
+public sealed class DevRelayTests(SignalingServerFixture server, ITestOutputHelper output) : IClassFixture<SignalingServerFixture>
 {
     [Fact]
     public async Task Devices_pair_and_exchange_messages_through_the_dev_relay()
@@ -47,7 +48,20 @@ public sealed class DevRelayTests(SignalingServerFixture server) : IClassFixture
 
         await beto.StartAsync();
 
-        await Eventually.TrueAsync(async () => (await beto.HistoryAsync()).Count == 80, "all 80 arrive", timeoutMs: 30_000);
+        try
+        {
+            await Eventually.TrueAsync(async () => (await beto.HistoryAsync()).Count == 80, "all 80 arrive", timeoutMs: 30_000);
+        }
+        catch
+        {
+            output.WriteLine($"Beto has {(await beto.HistoryAsync()).Count} messages");
+            foreach (var line in ana.Logs.Lines.Concat(beto.Logs.Lines).Order(StringComparer.Ordinal))
+            {
+                output.WriteLine(line);
+            }
+
+            throw;
+        }
         await Eventually.TrueAsync(async () => (await ana.HistoryAsync()).All(m => m.Status == MessageStatus.Delivered), "all 80 are confirmed", timeoutMs: 30_000);
     }
 }

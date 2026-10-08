@@ -13,5 +13,6 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(ShellNavigator.InviteRoute, typeof(InvitePage));
         Routing.RegisterRoute(ShellNavigator.ScanRoute, typeof(ScanPage));
         Routing.RegisterRoute(ShellNavigator.SettingsRoute, typeof(SettingsPage));
+        Routing.RegisterRoute(ShellNavigator.PairedRoute, typeof(PairedPage));
     }
 }

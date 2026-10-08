@@ -26,7 +26,7 @@ public sealed class ViewModelTests(SignalingServerFixture server) : IClassFixtur
     }
 
     [Fact]
-    public async Task Scanning_an_invite_pairs_and_opens_the_chat()
+    public async Task Scanning_an_invite_pairs_and_opens_the_paired_screen()
     {
         var invite = new InviteViewModel(_beto.Client, new InlineDispatcher(), new FakeNavigator());
         await invite.CreateAsync();
@@ -35,7 +35,13 @@ public sealed class ViewModelTests(SignalingServerFixture server) : IClassFixtur
         await scanner.AcceptAsync(invite.InviteText!);
 
         Assert.Null(scanner.ErrorMessage);
-        Assert.Equal((await _ana.SingleContactAsync()).Id, Assert.Single(_navigator.OpenedChats));
+        Assert.Equal((await _ana.SingleContactAsync()).Id, Assert.Single(_navigator.OpenedPaired));
+
+        var paired = new PairedViewModel(_ana.Client, _navigator);
+        await paired.LoadAsync((await _ana.SingleContactAsync()).Id);
+        Assert.Equal("Beto", paired.DisplayName);
+        Assert.Equal("B", paired.Initials);
+        Assert.Equal("A", paired.MyInitials);
     }
 
     [Fact]
@@ -46,7 +52,7 @@ public sealed class ViewModelTests(SignalingServerFixture server) : IClassFixtur
         await scanner.AcceptAsync("https://example.com/not-an-invite");
 
         Assert.Equal("Este código QR no es una invitación válida de Directo.", scanner.ErrorMessage);
-        Assert.Empty(_navigator.OpenedChats);
+        Assert.Empty(_navigator.OpenedPaired);
     }
 
     [Fact]
@@ -70,6 +76,41 @@ public sealed class ViewModelTests(SignalingServerFixture server) : IClassFixtur
         await _beto.StartAsync();
         await Eventually.TrueAsync(() => item.Status == MessageStatus.Delivered, "the chat shows the delivery");
         Assert.Equal("✓", item.StatusIcon);
+    }
+
+    [Fact]
+    public async Task Consecutive_messages_from_one_side_form_a_bubble_group()
+    {
+        await PairAsync();
+        await _beto.StopAsync();
+        using var chat = new ChatViewModel(_ana.Client, new InlineDispatcher(), _navigator);
+        await chat.LoadAsync((await _ana.SingleContactAsync()).Id);
+
+        foreach (var text in new[] { "uno", "dos", "tres" })
+        {
+            chat.Draft = text;
+            await chat.SendCommand.ExecuteAsync(null);
+        }
+
+        Assert.Equal([true, false, false], chat.Messages.Select(m => m.IsFirstInGroup));
+        Assert.Equal([false, false, true], chat.Messages.Select(m => m.IsLastInGroup));
+        Assert.Equal(new BubbleCorners(20, 6, 20, 6), chat.Messages[1].Corners);
+        Assert.Equal("B", chat.Initials);
+    }
+
+    [Fact]
+    public async Task Onboarding_is_remembered_and_saves_the_profile_name()
+    {
+        var onboarding = new OnboardingViewModel(_ana.Client) { ProfileName = "Ana López" };
+        var completed = false;
+        onboarding.Completed += (_, _) => completed = true;
+        Assert.False(await _ana.Client.IsOnboardedAsync());
+
+        await onboarding.StartCommand.ExecuteAsync(null);
+
+        Assert.True(completed);
+        Assert.True(await _ana.Client.IsOnboardedAsync());
+        Assert.Equal("Ana López", await _ana.Client.GetProfileNameAsync());
     }
 
     [Fact]
@@ -110,6 +151,8 @@ public sealed class ViewModelTests(SignalingServerFixture server) : IClassFixtur
         await betoView.LoadAsync((await _beto.SingleContactAsync()).Id);
 
         Assert.Equal(anaView.SafetyNumber, betoView.SafetyNumber);
+        Assert.Equal(anaView.FingerprintCells, betoView.FingerprintCells);
+        Assert.Equal(12, anaView.SafetyGroups.Count);
         await anaView.SetVerifiedCommand.ExecuteAsync(true);
 
         Assert.Equal(VerificationState.Verified, (await _ana.SingleContactAsync()).Verification);
@@ -132,7 +175,15 @@ public sealed class ViewModelTests(SignalingServerFixture server) : IClassFixtur
             return Task.CompletedTask;
         }
 
+        public List<ContactId> OpenedPaired { get; } = [];
+
         public Task OpenContactDetailsAsync(ContactId contactId) => Task.CompletedTask;
+
+        public Task OpenPairedAsync(ContactId contactId)
+        {
+            OpenedPaired.Add(contactId);
+            return Task.CompletedTask;
+        }
 
         public Task OpenInviteAsync() => Task.CompletedTask;
 

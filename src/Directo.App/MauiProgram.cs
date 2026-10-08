@@ -16,7 +16,17 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
-            .UseBarcodeReader();
+            .UseBarcodeReader()
+            .ConfigureFonts(fonts =>
+            {
+                // Bundled OFL fonts (see Resources/Fonts/OFL-LICENSES.txt): no runtime download.
+                fonts.AddFont("DMSans_400Regular.ttf", "DMSans");
+                fonts.AddFont("DMSans_500Medium.ttf", "DMSansMedium");
+                fonts.AddFont("DMSans_600SemiBold.ttf", "DMSansSemiBold");
+                fonts.AddFont("SpaceGrotesk_600SemiBold.ttf", "SpaceGroteskSemiBold");
+                fonts.AddFont("SpaceGrotesk_700Bold.ttf", "SpaceGroteskBold");
+                fonts.AddFont("JetBrainsMono_500Medium.ttf", "JetBrainsMono");
+            });
 
 #if DEBUG
         builder.Logging.AddDebug();
@@ -41,6 +51,8 @@ public static class MauiProgram
         services.AddTransient<ScanInviteViewModel>();
         services.AddTransient<ContactDetailsViewModel>();
         services.AddTransient<SettingsViewModel>();
+        services.AddTransient<OnboardingViewModel>();
+        services.AddTransient<PairedViewModel>();
 
         services.AddTransient<ContactsPage>();
         services.AddTransient<ChatPage>();
@@ -48,6 +60,8 @@ public static class MauiProgram
         services.AddTransient<ScanPage>();
         services.AddTransient<ContactDetailsPage>();
         services.AddTransient<SettingsPage>();
+        services.AddTransient<OnboardingPage>();
+        services.AddTransient<PairedPage>();
 
         return builder.Build();
     }

@@ -138,7 +138,9 @@ public sealed class EndToEndTests(SignalingServerFixture server) : IClassFixture
         var message = await _ana.Client.SendMessageAsync((await _ana.SingleContactAsync()).Id, "¿me bloqueaste?");
         await Task.Delay(800);
 
-        Assert.Equal(MessageStatus.Pending, (await _ana.FindAsync(message.Id))!.Status);
+        // Ana may have transmitted it into a session Beto refused at once ("Sent"), but it is
+        // never confirmed, and Beto's phone stores nothing.
+        Assert.Contains((await _ana.FindAsync(message.Id))!.Status, new[] { MessageStatus.Pending, MessageStatus.Sent });
         Assert.Empty(await _beto.HistoryAsync());
     }
 
