@@ -1,0 +1,14 @@
+{
+  "name": "directo-site",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview"
+  },
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "mermaid": "^12.0.0",
+    "vitepress": "^1.6.4"
+  }
+}
