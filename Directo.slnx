@@ -3,6 +3,7 @@
     <Project Path="src/Directo.Client/Directo.Client.csproj" />
     <Project Path="src/Directo.Domain/Directo.Domain.csproj" />
     <Project Path="src/Directo.Networking/Directo.Networking.csproj" />
+    <Project Path="src/Directo.Presentation/Directo.Presentation.csproj" />
     <Project Path="src/Directo.Protocol/Directo.Protocol.csproj" />
     <Project Path="src/Directo.Security/Directo.Security.csproj" />
     <Project Path="src/Directo.Signaling.Server/Directo.Signaling.Server.csproj" />
