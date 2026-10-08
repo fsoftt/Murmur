@@ -73,6 +73,18 @@ public class DomainTests
     }
 
     [Fact]
+    public void Token_bucket_allows_a_burst_then_asks_to_wait()
+    {
+        var bucket = new TokenBucket(ratePerSecond: 10, capacity: 3, TimeProvider.System);
+
+        Assert.Equal(TimeSpan.Zero, bucket.Reserve());
+        Assert.Equal(TimeSpan.Zero, bucket.Reserve());
+        Assert.Equal(TimeSpan.Zero, bucket.Reserve());
+        Assert.InRange(bucket.Reserve().TotalMilliseconds, 50, 100);
+        Assert.InRange(bucket.Reserve().TotalMilliseconds, 150, 200);
+    }
+
+    [Fact]
     public async Task Signal_set_before_wait_is_not_lost()
     {
         var signal = new AsyncSignal();

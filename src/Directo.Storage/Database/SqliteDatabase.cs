@@ -70,7 +70,8 @@ public sealed class SqliteDatabase : IAsyncDisposable
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            return operation(_connection);
+            // SQLite calls are synchronous; keep them off the caller's (often the UI) thread.
+            return await Task.Run(() => operation(_connection), CancellationToken.None).ConfigureAwait(false);
         }
         catch (SqliteException ex)
         {

@@ -26,4 +26,28 @@ public sealed class DevRelayTests(SignalingServerFixture server) : IClassFixture
         Assert.Equal(big, Assert.Single(await beto.HistoryAsync()).Body);
         Assert.DoesNotContain("xxxxxxxxxxxxxxxx", string.Join('\n', server.Sockets.Select(s => s.AllTraffic)), StringComparison.Ordinal);
     }
+
+    [Fact]
+    public async Task A_backlog_larger_than_the_server_burst_is_paced_not_dropped()
+    {
+        var relay = new DevRelayPeerLinkFactory();
+        await using var ana = await TestDevice.StartAsync("Ana", server, relay);
+        await using var beto = await TestDevice.StartAsync("Beto", server, relay);
+        var invite = await beto.Client.CreateInviteAsync();
+        await ana.Client.AcceptInviteAsync(invite.Text);
+        await Eventually.TrueAsync(async () => (await beto.Client.Contacts.ListAsync()).Count == 1, "Beto stored the contact");
+        await beto.StopAsync();
+
+        // The test server allows a burst of 50 relays per connection.
+        var contact = await ana.SingleContactAsync();
+        for (var i = 0; i < 80; i++)
+        {
+            await ana.Client.SendMessageAsync(contact.Id, $"m{i}");
+        }
+
+        await beto.StartAsync();
+
+        await Eventually.TrueAsync(async () => (await beto.HistoryAsync()).Count == 80, "all 80 arrive", timeoutMs: 30_000);
+        await Eventually.TrueAsync(async () => (await ana.HistoryAsync()).All(m => m.Status == MessageStatus.Delivered), "all 80 are confirmed", timeoutMs: 30_000);
+    }
 }
