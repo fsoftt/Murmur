@@ -1,64 +1,64 @@
-# Emparejamiento por QR
+# QR pairing
 
-En Murmur no hay directorio de usuarios: para hablar con alguien, os tenéis que **ver en persona**
-(o por videollamada) y uno escanea el QR del otro.
+Murmur has no user directory: to talk to someone, you have to **meet in person**
+(or over a video call) and one of you scans the other's QR code.
 
-## Qué contiene el QR
+## What the QR code contains
 
 ```text
-MURMUR1:<base64url( { cuerpo, firma } )>
+MURMUR1:<base64url( { body, signature } )>
 
-cuerpo = { versión, tarjeta de identidad, token aleatorio (16 bytes), caducidad, nombre opcional }
-tarjeta = { clave de identidad Ed25519, clave estática X25519, firma }
-firma   = Ed25519(clave de identidad, "Murmur/v1/invite" ‖ cuerpo)
+body      = { version, identity card, random token (16 bytes), expiry, optional name }
+card      = { Ed25519 identity key, X25519 static key, signature }
+signature = Ed25519(identity key, "Murmur/v1/invite" ‖ body)
 ```
 
-Solo **claves públicas** y un token de un solo uso. Nunca claves privadas ni secretos permanentes.
-Caduca a los 10 minutos.
+Only **public keys** and a single-use token. Never private keys or long-term secrets.
+It expires after 10 minutes.
 
-## El flujo completo
+## The full flow
 
 ```mermaid
 sequenceDiagram
     actor Beto
-    participant TB as Teléfono de Beto
-    participant S as Servidor de signaling
-    participant TA as Teléfono de Ana
+    participant TB as Beto's phone
+    participant S as Signaling server
+    participant TA as Ana's phone
     actor Ana
-    Beto->>TB: Mostrar mi QR
-    TB->>TB: crea token, guarda invitación pendiente, firma
+    Beto->>TB: Show my QR
+    TB->>TB: creates token, stores pending invitation, signs
     TB->>S: sub [HKDF(token)]
-    Ana->>TA: Escanear QR
-    TA->>TA: verifica firmas y caducidad (sin red)
+    Ana->>TA: Scan QR
+    TA->>TA: verifies signatures and expiry (offline)
     TA->>S: sub [HKDF(token)]
     S-->>TB: presence = 1
     S-->>TA: presence = 1
-    TA->>TB: Noise_IK msg 1: conoce la estática de Beto por el QR<br/>envía cifrados su tarjeta + token
-    TB->>TB: token correcto (tiempo constante), no caducado, no usado por otro<br/>tarjeta firmada · estática probada = la de la tarjeta
-    TB->>TB: guarda a Ana como contacto
-    TB->>TA: Noise_IK msg 2 (nombre de Beto)
-    TA->>TA: guarda a Beto como contacto
-    Note over TA,TB: Ambos: contacto "sin verificar" hasta comparar el código de seguridad
+    TA->>TB: Noise_IK msg 1: knows Beto's static key from the QR<br/>sends her card + token encrypted
+    TB->>TB: token correct (constant time), not expired, not used by someone else<br/>card signed · proven static key = the one on the card
+    TB->>TB: saves Ana as a contact
+    TB->>TA: Noise_IK msg 2 (Beto's name)
+    TA->>TA: saves Beto as a contact
+    Note over TA,TB: Both: contact is "unverified" until the safety number is compared
 ```
 
-## Por qué así
+## Why it works this way
 
-- **Verificar sin red:** la firma del QR prueba que la invitación viene de la clave de identidad
-  que contiene y que nadie la modificó.
-- **Noise_IK:** Ana ya conoce la clave estática de Beto, así que puede cifrar desde el primer
-  mensaje. Beto conoce a Ana justo en ese mensaje, y el handshake **demuestra** que Ana posee la
-  privada de la clave que dice tener.
-- **Bidireccional:** Beto no responde nada si alguna comprobación falla, y cada lado guarda el
-  contacto solo cuando el otro ha demostrado su identidad.
-- **Idempotente:** si se pierde la respuesta, Ana puede reintentar con el mismo QR; el token queda
-  ligado a su identidad, no a la de un tercero.
+- **Offline verification:** the QR signature proves that the invitation comes from the identity
+  key it contains and that nobody has modified it.
+- **Noise_IK:** Ana already knows Beto's static key, so she can encrypt from the very first
+  message. Beto learns about Ana in that same message, and the handshake **proves** that Ana holds
+  the private key for the key she claims to have.
+- **Bidirectional:** Beto doesn't reply at all if any check fails, and each side saves the
+  contact only once the other has proven its identity.
+- **Idempotent:** if the reply is lost, Ana can retry with the same QR; the token becomes bound to
+  her identity, not to a third party's.
 
-## El riesgo que queda: alguien que ve tu QR
+## The remaining risk: someone who sees your QR
 
-Si un tercero fotografía el QR y lo usa **antes** que tu contacto, se emparejará él. Mitigaciones:
-token de un solo uso, caducidad de 10 minutos, el contacto aparece como **sin verificar** y el
-[código de seguridad](/concepts/safety-number) no coincidirá.
+If a third party photographs the QR and uses it **before** your contact does, they will be the one
+who gets paired. Mitigations: a single-use token, a 10-minute expiry, the contact shows up as
+**unverified**, and the [safety number](/concepts/safety-number) won't match.
 
-::: tip Compara el código de seguridad una vez
-En la ficha del contacto, ambos veis 60 dígitos. Si coinciden, nadie se ha interpuesto.
+::: tip Compare the safety number once
+On the contact details screen, you both see 60 digits. If they match, nobody is in the middle.
 :::

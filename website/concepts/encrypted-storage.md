@@ -1,33 +1,34 @@
-# Almacenamiento cifrado
+# Encrypted storage
 
 ## SQLCipher
 
-**SQLCipher** es SQLite con **todo el fichero cifrado** (páginas de datos, índices y metadatos) con
-AES-256. Sin la clave, el fichero parece ruido aleatorio: ni siquiera la cabecera "SQLite format 3"
-es visible.
+**SQLCipher** is SQLite with **the whole file encrypted** (data pages, indexes and metadata) using
+AES-256. Without the key, the file looks like random noise: not even the "SQLite format 3" header is
+visible.
 
-## Dónde vive la clave
+## Where the key lives
 
 ```mermaid
 flowchart LR
-    KS["Android Keystore<br/>(protegido por el sistema,<br/>a veces por hardware)"] --> SS[SecureStorage]
-    SS -- "clave de 256 bits" --> DB[(murmur.db<br/>SQLCipher)]
-    SS -- "claves privadas de identidad" --> ID[Identidad]
-    FILE[Ladrón copia murmur.db] -. sin la clave .-> X[❌ ruido]
+    KS["Android Keystore<br/>(protected by the system,<br/>sometimes by hardware)"] --> SS[SecureStorage]
+    SS -- "256-bit key" --> DB[(murmur.db<br/>SQLCipher)]
+    SS -- "private identity keys" --> ID[Identity]
+    FILE[Thief copies murmur.db] -. without the key .-> X[❌ noise]
 ```
 
-- La clave es **aleatoria** (no una contraseña), así que se aplica en modo "clave cruda", sin pasar
-  por una función de derivación lenta.
-- Nunca se guarda junto a la base.
-- Si SQLCipher no estuviera disponible, la app **se niega a abrir** la base en lugar de guardar en claro.
-- Copias de seguridad de Android desactivadas: la base no sale del teléfono.
+- The key is **random** (not a password), so it is applied in "raw key" mode, without going through
+  a slow key-derivation function.
+- It is never stored alongside the database.
+- If SQLCipher were unavailable, the app **refuses to open** the database rather than storing data
+  in plaintext.
+- Android backups are disabled: the database never leaves the phone.
 
-## Robustez
+## Robustness
 
-- Migraciones versionadas con `PRAGMA user_version`, cada una en su transacción.
-- Tablas `STRICT`, claves foráneas con borrado en cascada, `secure_delete` y `synchronous = FULL`.
-- Una única conexión serializada, con las consultas fuera del hilo de la interfaz.
+- Versioned migrations using `PRAGMA user_version`, each in its own transaction.
+- `STRICT` tables, foreign keys with cascading deletes, `secure_delete` and `synchronous = FULL`.
+- A single serialised connection, with queries running off the UI thread.
 
-**En el código:** [`SqliteDatabase.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Storage/Database/SqliteDatabase.cs) ·
+**In the code:** [`SqliteDatabase.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Storage/Database/SqliteDatabase.cs) ·
 [`Migrations.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Storage/Database/Migrations.cs) ·
 [`MauiSecretStore.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.App/Services/MauiSecretStore.cs)

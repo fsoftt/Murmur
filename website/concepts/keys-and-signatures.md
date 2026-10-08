@@ -1,69 +1,69 @@
-# Claves, firmas y Diffie-Hellman
+# Keys, signatures and Diffie-Hellman
 
-## Clave pública y privada
+## Public and private keys
 
-Un **par de claves** son dos números relacionados matemáticamente. La **privada** nunca sale del
-teléfono; la **pública** se puede enseñar a cualquiera. Lo que hace una solo puede comprobarlo o
-deshacerlo la otra.
+A **key pair** is two mathematically related numbers. The **private** key never leaves the phone;
+the **public** key can be shown to anyone. Whatever one of them does, only the other can check or
+undo.
 
-## Dos curvas, dos trabajos
+## Two curves, two jobs
 
 | | Ed25519 | X25519 |
 |---|---|---|
-| Para qué | **Firmar**: demostrar que algo viene de ti y que nadie lo cambió | **Acordar un secreto** con otra persona (Diffie-Hellman) |
-| En Murmur | Firma de la tarjeta de identidad y de la invitación QR | Handshakes Noise y derivación de temas de encuentro |
-| Tamaño | Clave de 32 bytes, firma de 64 | Clave de 32 bytes |
+| What for | **Signing**: proving that something comes from you and that nobody changed it | **Agreeing on a secret** with someone else (Diffie-Hellman) |
+| In Murmur | Signs the identity card and the QR invite | Noise handshakes and deriving rendezvous topics |
+| Size | 32-byte key, 64-byte signature | 32-byte key |
 
-### Firmar
+### Signing
 
 ```mermaid
 flowchart LR
-    M[Invitación] --> S((Firmar))
-    PRIV[🔑 privada de Beto] --> S
-    S --> F[Firma]
-    F --> V((Verificar))
+    M[Invite] --> S((Sign))
+    PRIV[🔑 Beto's private key] --> S
+    S --> F[Signature]
+    F --> V((Verify))
     M --> V
-    PUB[🔓 pública de Beto] --> V
-    V --> OK[✅ auténtica e intacta<br/>o ❌]
+    PUB[🔓 Beto's public key] --> V
+    V --> OK[✅ authentic and intact<br/>or ❌]
 ```
 
-### Diffie-Hellman: el mismo secreto sin enviarlo
+### Diffie-Hellman: the same secret without sending it
 
 ```mermaid
 flowchart LR
-    a[🔑 privada de Ana] --> X1((X25519))
-    B[🔓 pública de Beto] --> X1
-    b[🔑 privada de Beto] --> X2((X25519))
-    A[🔓 pública de Ana] --> X2
-    X1 --> S1[secreto]
-    X2 --> S2[el mismo secreto]
+    a[🔑 Ana's private key] --> X1((X25519))
+    B[🔓 Beto's public key] --> X1
+    b[🔑 Beto's private key] --> X2((X25519))
+    A[🔓 Ana's public key] --> X2
+    X1 --> S1[secret]
+    X2 --> S2[the same secret]
 ```
 
-Cada uno combina **su privada** con **la pública del otro** y obtiene el mismo número. Ese secreto
-nunca viaja por la red.
+Each side combines **its own private key** with **the other's public key** and gets the same number.
+That secret never travels over the network.
 
-## Estáticas y efímeras
+## Static and ephemeral
 
-- **Estática:** dura lo que dure la instalación. Es tu identidad para Noise.
-- **Efímera:** se crea para una sola conexión y se destruye al terminar. Es la clave de la
+- **Static:** lasts as long as the installation. It is your identity for Noise.
+- **Ephemeral:** created for a single connection and destroyed when it ends. It is the key to
   [forward secrecy](./noise#forward-secrecy).
 
-## La tarjeta de identidad
+## The identity card
 
 ```text
-tarjeta = { clave de identidad (Ed25519), clave estática (X25519),
-            firma = Ed25519(identidad, "Murmur/v1/identity-card" ‖ identidad ‖ estática) }
+card = { identity key (Ed25519), static key (X25519),
+         signature = Ed25519(identity, "Murmur/v1/identity-card" ‖ identity ‖ static) }
 ```
 
-La firma ata la estática a la identidad: nadie puede presentar tu identidad con otra estática.
-Separar ambas claves permite, en el futuro, una estática por dispositivo bajo la misma identidad
-([ADR-004](/guide/decisions#adr-004)).
+The signature binds the static key to the identity: nobody can present your identity with a
+different static key. Keeping the two keys separate allows, in the future, one static key per device
+under the same identity ([ADR-004](/guide/decisions#adr-004)).
 
-## Una regla importante
+## One important rule
 
-**Nunca implementar primitivas criptográficas.** Murmur usa las de BouncyCastle y .NET a través de
-envoltorios mínimos que también rechazan claves de orden bajo (un resultado X25519 todo ceros).
+**Never implement cryptographic primitives.** Murmur uses those from BouncyCastle and .NET through
+minimal wrappers that also reject low-order keys (an all-zero X25519 result).
 
-**En el código:** [`Curve25519.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Security/Primitives/Curve25519.cs) ·
+**In the code:** [`Curve25519.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Security/Primitives/Curve25519.cs) ·
 [`LocalIdentityKeys.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Security/Identity/LocalIdentityKeys.cs) ·
 [`IdentityCard.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Protocol/Identity/IdentityCard.cs)

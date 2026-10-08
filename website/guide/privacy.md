@@ -1,45 +1,45 @@
-# Privacidad y amenazas
+# Privacy and threats
 
-> Resumen del [modelo de amenazas completo](https://github.com/fsoftt/Murmur/blob/main/docs/threat-model.md).
-> **El cifrado de extremo a extremo protege el contenido; no elimina toda la metadata.**
+> Summary of the [full threat model](https://github.com/fsoftt/Murmur/blob/main/docs/threat-model.md) (in Spanish).
+> **End-to-end encryption protects the content; it does not remove all metadata.**
 
-## Qué ve cada uno
+## Who sees what
 
-| | Contenido | Contactos | Quién habla con quién | Tu IP | Cuándo estás online |
+| | Content | Contacts | Who talks to whom | Your IP | When you're online |
 |---|---|---|---|---|---|
-| **Servidor de signaling** | ❌ | ❌ | Solo "estas dos conexiones comparten un tema aleatorio hoy" | ✅ | ✅ |
-| **Red o Wi-Fi hostil** | ❌ (cifrado y autenticado) | ❌ | Ve tráfico entre dos IPs | ✅ | ✅ |
-| **Tu contacto** | ✅ | — | — | ✅ (P2P) | ✅ |
-| **Ladrón con el teléfono bloqueado** | ❌ (SQLCipher + Keystore) | ❌ | ❌ | — | — |
-| **Malware en tu teléfono desbloqueado** | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Signaling server** | ❌ | ❌ | Only "these two connections share a random topic today" | ✅ | ✅ |
+| **Hostile network or Wi-Fi** | ❌ (encrypted and authenticated) | ❌ | Sees traffic between two IPs | ✅ | ✅ |
+| **Your contact** | ✅ | — | — | ✅ (P2P) | ✅ |
+| **Thief with your locked phone** | ❌ (SQLCipher + Keystore) | ❌ | ❌ | — | — |
+| **Malware on your unlocked phone** | ✅ | ✅ | ✅ | ✅ | ✅ |
 
-La última fila es honesta: **la seguridad de extremo a extremo termina en los extremos.**
+The last row is the honest one: **end-to-end security ends at the ends.**
 
-## Lo que el servidor nunca recibe
+## What the server never receives
 
-Texto de mensajes · nombres · claves de identidad · listas de contactos · invitaciones · claves privadas.
-Un test de integración graba **todo** el tráfico del servidor durante un emparejamiento y un
-intercambio de mensajes, y comprueba que no aparece nada de eso.
+Message text · names · identity keys · contact lists · invites · private keys.
+An integration test records **all** server traffic during a pairing and a message exchange,
+and checks that none of those appear.
 
-## Propiedades criptográficas
+## Cryptographic properties
 
-- **Confidencialidad e integridad** de cada mensaje (ChaCha20-Poly1305).
-- **Autenticación mutua** en cada sesión (Noise_KK con las claves del emparejamiento).
-- **Forward secrecy por sesión**: grabar tráfico hoy y robar el teléfono mañana no sirve.
-- **Detección de replay y reordenamiento** (nonces de contador).
-- Sin *post-compromise security* dentro de una misma sesión ([ADR-005](/guide/decisions#adr-005)).
+- **Confidentiality and integrity** of every message (ChaCha20-Poly1305).
+- **Mutual authentication** in every session (Noise_KK with the keys from pairing).
+- **Per-session forward secrecy**: recording traffic today and stealing the phone tomorrow gets you nothing.
+- **Replay and reordering detection** (counter nonces).
+- No *post-compromise security* within a single session ([ADR-005](/guide/decisions#adr-005)).
 
-## Higiene
+## Hygiene
 
-- Nunca se registran mensajes, claves, tokens, invitaciones, temas ni IPs.
-- Sin SDKs de analítica, publicidad ni crash reporting.
-- Copias de seguridad de Android desactivadas.
-- Los avisos de error usan lenguaje claro, nunca trazas técnicas.
+- Messages, keys, tokens, invites, topics and IPs are never logged.
+- No analytics, advertising or crash-reporting SDKs.
+- Android backups are disabled.
+- Error messages use plain language, never stack traces.
 
-## Prioridades de la auditoría
+## Audit priorities
 
-1. Implementación de Noise.
-2. Emparejamiento y verificación de invitaciones.
-3. Parsers de red y límites.
-4. Almacenamiento local y gestión de claves.
-5. Servidor de signaling (abuso y metadata).
+1. The Noise implementation.
+2. Pairing and invite verification.
+3. Network parsers and limits.
+4. Local storage and key management.
+5. The signaling server (abuse and metadata).

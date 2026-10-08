@@ -1,37 +1,38 @@
-# Vectores de prueba
+# Test vectors
 
-## El problema del código criptográfico
+## The problem with cryptographic code
 
-Un error en criptografía no suele romper nada visible: el programa cifra y descifra perfectamente…
-consigo mismo. Si nuestro Noise tuviera un error sutil (un orden de bytes, una clave mal mezclada),
-dos teléfonos con **el mismo** código se entenderían igual, y el error pasaría desapercibido.
+A bug in cryptography rarely breaks anything visible: the program encrypts and decrypts perfectly…
+against itself. If our Noise implementation had a subtle bug (a byte order, a key mixed in wrongly),
+two phones running **the same** code would still understand each other, and the bug would go
+unnoticed.
 
-## La solución
+## The solution
 
-Un **vector de prueba** es una entrada fija con su salida exacta conocida, producida por **otra
-implementación independiente**. Si la nuestra produce exactamente los mismos bytes, implementa la
-especificación y no una variante propia.
+A **test vector** is a fixed input together with its exact known output, produced by **another,
+independent implementation**. If ours produces exactly the same bytes, it implements the
+specification and not a homegrown variant.
 
 ```mermaid
 flowchart LR
-    K["Claves fijas<br/>(estáticas y efímeras)"] --> PY["noiseprotocol<br/>(Python, independiente)"]
+    K["Fixed keys<br/>(static and ephemeral)"] --> PY["noiseprotocol<br/>(Python, independent)"]
     K --> CS["Murmur.Security<br/>(C#)"]
-    PY --> V1[mensajes del handshake,<br/>hash, transporte]
-    CS --> V2[mensajes del handshake,<br/>hash, transporte]
-    V1 --> EQ{¿Idénticos<br/>byte a byte?}
+    PY --> V1[handshake messages,<br/>hash, transport]
+    CS --> V2[handshake messages,<br/>hash, transport]
+    V1 --> EQ{Identical<br/>byte for byte?}
     V2 --> EQ
 ```
 
-Los vectores de Murmur cubren **Noise_KK** y **Noise_IK**: los dos mensajes del handshake, el hash
-del handshake y tres mensajes de transporte en ambas direcciones. El script que los generó está en
-el repositorio, para que cualquiera pueda reproducirlos.
+Murmur's vectors cover **Noise_KK** and **Noise_IK**: both handshake messages, the handshake hash
+and three transport messages in each direction. The script that generated them is in the repository,
+so anyone can reproduce them.
 
-## Lo que complementa a los vectores
+## What complements the vectors
 
-- Tests negativos: prólogo distinto, clave equivocada, bit cambiado, replay, mensaje fuera de turno.
-- Fuzzing de los parsers.
-- Y, antes de cualquier uso real, **una auditoría independiente**.
+- Negative tests: a different prologue, the wrong key, a flipped bit, a replay, an out-of-turn message.
+- Fuzzing of the parsers.
+- And, before any real-world use, **an independent audit**.
 
-**En el código:** [`NoiseVectorTests.cs`](https://github.com/fsoftt/Murmur/blob/main/tests/Murmur.Security.Tests/NoiseVectorTests.cs) ·
+**In the code:** [`NoiseVectorTests.cs`](https://github.com/fsoftt/Murmur/blob/main/tests/Murmur.Security.Tests/NoiseVectorTests.cs) ·
 [`noise-vectors.json`](https://github.com/fsoftt/Murmur/blob/main/tests/Murmur.Security.Tests/TestVectors/noise-vectors.json) ·
 [`generate_noise_vectors.py`](https://github.com/fsoftt/Murmur/blob/main/tests/Murmur.Security.Tests/TestVectors/generate_noise_vectors.py)

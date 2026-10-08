@@ -1,17 +1,17 @@
-# Formatos de cable
+# Wire formats
 
-El **formato de cable** (*wire format*) es cómo se convierten los datos en bytes para viajar por la
-red, y cómo se reconstruyen al otro lado. Si dos programas no coinciden exactamente en él, no se
-entienden. Por eso Murmur tiene una
-[especificación pública](https://github.com/fsoftt/Murmur/blob/main/docs/protocol/spec.md), independiente del código: con ella se podría
-escribir otro cliente compatible, en Kotlin o Swift.
+The **wire format** is how data is turned into bytes to travel over the network, and how it is
+rebuilt on the other side. If two programs do not agree on it exactly, they cannot understand each
+other. That is why Murmur has a
+[public specification](https://github.com/fsoftt/Murmur/blob/main/docs/protocol/spec.md), independent of the code: with it, someone
+could write another compatible client in Kotlin or Swift.
 
-## Dos formatos, dos usos
+## Two formats, two uses
 
 | | JSON | CBOR |
 |---|---|---|
-| Dónde | Teléfono ↔ servidor de signaling | Teléfono ↔ teléfono (dentro de Noise) |
-| Por qué | Legible y fácil de depurar; el servidor solo ve sobres | Binario, compacto, estricto y con tipos (bytes, enteros) |
+| Where | Phone ↔ signaling server | Phone ↔ phone (inside Noise) |
+| Why | Readable and easy to debug; the server only sees envelopes | Binary, compact, strict and typed (bytes, integers) |
 
 ### JSON (signaling)
 
@@ -20,36 +20,36 @@ escribir otro cliente compatible, en Kotlin o Swift.
 {"t":"presence","topic":"q3Jk0…","peers":1}
 ```
 
-### CBOR (mensajes)
+### CBOR (messages)
 
-CBOR es "JSON binario". En lugar de nombres de campo usamos **números pequeños**:
+CBOR is "binary JSON". Instead of field names we use **small numbers**:
 
 ```text
-{ 0: 1,                 ← tipo: mensaje de chat
+{ 0: 1,                 ← type: chat message
   1: h'01a1…',          ← id (16 bytes)
-  2: 42,                ← reloj de Lamport
-  3: 1791500000000,     ← hora en milisegundos
-  4: "Hola" }           ← cuerpo
+  2: 42,                ← Lamport clock
+  3: 1791500000000,     ← time in milliseconds
+  4: "Hello" }          ← body
 ```
 
-## Las reglas que lo hacen robusto
+## The rules that make it robust
 
-1. **Límites antes de parsear.** Un frame no puede superar 60 KiB ni un mensaje 16 KiB. Se comprueba
-   antes de reservar memoria.
-2. **Estricto.** Se rechazan claves duplicadas, bytes sobrantes, longitudes indefinidas y UTF-8 inválido.
-3. **Canónico al escribir.** El mismo dato siempre produce los mismos bytes.
-4. **Ignorar lo desconocido.** Un campo `5` añadido en una versión futura no rompe a los clientes
-   antiguos; un tipo de frame desconocido se ignora. Así el protocolo puede evolucionar.
-5. **Todo lo que llega de la red es hostil.** Los tests alimentan los parsers con 20 000 entradas
-   aleatorias o con un bit cambiado: solo pueden producir un error de protocolo controlado.
+1. **Limits before parsing.** A frame cannot exceed 60 KiB, nor a message 16 KiB. This is checked
+   before any memory is allocated.
+2. **Strict.** Duplicate keys, trailing bytes, indefinite lengths and invalid UTF-8 are rejected.
+3. **Canonical when writing.** The same data always produces the same bytes.
+4. **Ignore the unknown.** A field `5` added in a future version does not break older clients; an
+   unknown frame type is ignored. This lets the protocol evolve.
+5. **Everything that comes from the network is hostile.** The tests feed the parsers 20,000 random
+   inputs or inputs with a flipped bit: the only possible outcome is a controlled protocol error.
 
-## Versiones
+## Versions
 
-Las tarjetas y las invitaciones llevan su propia versión, el handshake negocia la del protocolo y
-el prefijo del QR (`MURMUR1:`) identifica el formato. Un cambio incompatible exige una versión
-nueva y un prólogo nuevo.
+Identity cards and invites carry their own version, the handshake negotiates the protocol version,
+and the QR prefix (`MURMUR1:`) identifies the format. An incompatible change requires a new version
+and a new prologue.
 
-**En el código:** [`PeerFrameCodec.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Protocol/Frames/PeerFrameCodec.cs) ·
+**In the code:** [`PeerFrameCodec.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Protocol/Frames/PeerFrameCodec.cs) ·
 [`CborMap.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Protocol/Serialization/CborMap.cs) ·
 [`SignalingMessages.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Protocol/Signaling/SignalingMessages.cs) ·
 [`ProtocolConstants.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Protocol/ProtocolConstants.cs)

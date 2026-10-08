@@ -1,47 +1,55 @@
-# Decisiones de diseño
+# Design decisions
 
-Cada decisión importante está registrada como un ADR en
-[`docs/adr`](https://github.com/fsoftt/Murmur/tree/main/docs/adr), con su contexto, las alternativas
-y las consecuencias. Este es el resumen.
+Every important decision is recorded as an ADR in
+[`docs/adr`](https://github.com/fsoftt/Murmur/tree/main/docs/adr) (in Spanish), with its context,
+the alternatives and the consequences. This is the summary.
 
-## ADR-001 · Local-first, sin buzón en el servidor {#adr-001}
-La fuente de verdad es la base de cada dispositivo. Un mensaje solo se entrega con **ambos online**.
-*Precio:* peor experiencia que con un buzón central, sobre todo por las limitaciones de segundo plano en móvil.
+## ADR-001 · Local-first, no mailbox on the server {#adr-001}
+The source of truth is each device's database. A message is only delivered when **both
+phones are online at the same time**. *Cost:* a worse experience than with a central mailbox,
+softened by background delivery ([ADR-012](#adr-012)).
 
-## ADR-002 · Sin TURN en el MVP {#adr-002}
-No se retransmite tráfico por un servidor cuando no hay ruta directa. *Precio:* algunas parejas no
-conectarán nunca. Se medirá antes de hacerlo permanente.
+## ADR-002 · No TURN in the MVP {#adr-002}
+Traffic is not relayed through a server when there is no direct route. *Cost:* some pairs will
+never connect. This will be measured before it becomes permanent.
 
-## ADR-003 · Transporte abstracto, WebRTC como objetivo {#adr-003}
-El dominio solo ve `IPeerLink`. Producción: WebRTC DataChannel vía binding de `stream-webrtc-android`.
-**SIPSorcery descartado** por una restricción de uso en su licencia incompatible con la AGPL.
+## ADR-003 · Abstract transport, WebRTC as the target {#adr-003}
+The domain only sees `IPeerLink`. Production: WebRTC DataChannel via a binding of `stream-webrtc-android`.
+**SIPSorcery ruled out** because of a usage restriction in its license that is incompatible with the AGPL.
 
-## ADR-004 · Modelo de identidad {#adr-004}
-Ed25519 para firmar + X25519 estática para Noise, unidas en una tarjeta firmada. Sin teléfono, email
-ni usuario global. Preparado para varias tarjetas por usuario (multi-dispositivo).
+## ADR-004 · Identity model {#adr-004}
+Ed25519 for signing + a static X25519 key for Noise, bound together in a signed card. No phone number,
+email or global username. Ready for several cards per user (multi-device).
 
-## ADR-005 · Noise por conexión en lugar de Double Ratchet {#adr-005}
-Sin buzón asíncrono, un handshake Noise_KK nuevo por conexión da *forward secrecy* sin estado de
-ratchet persistente. Implementación propia sobre primitivas auditadas, validada con vectores
-independientes y prioridad nº 1 de la auditoría.
+## ADR-005 · Noise per connection instead of Double Ratchet {#adr-005}
+Without an asynchronous mailbox, a fresh Noise_KK handshake per connection gives *forward secrecy*
+without persistent ratchet state. Our own implementation on top of audited primitives, validated with
+independent vectors and the audit's top priority.
 
-## ADR-006 · Transporte por relay solo para desarrollo {#adr-006}
-Para probar en teléfonos antes de WebRTC, las compilaciones Debug pasan el canal (ya cifrado) por el
-relay del servidor, con ritmo limitado. Release no lo incluye.
+## ADR-006 · Relay transport for development only {#adr-006}
+To test on phones before WebRTC, Debug builds route the (already encrypted) channel through the
+server's relay, with rate limiting. Release builds don't include it.
 
-## ADR-007 · Temas de encuentro por pareja y rotativos {#adr-007}
-`HKDF(DH(estáticas), día UTC)`: el servidor no ve identidades ni puede seguir a una pareja entre días
-solo por el tema.
+## ADR-007 · Per-pair, rotating rendezvous topics {#adr-007}
+`HKDF(DH(statics), UTC day)`: the server sees no identities and cannot track a pair across days
+from the topic alone.
 
-## ADR-008 · .NET MAUI, Android primero, Clean Architecture + MVVM {#adr-008}
-Sin versión web (garantías más débiles). ViewModels en .NET puro para probarlos en cualquier SO.
+## ADR-008 · .NET MAUI, Android first, Clean Architecture + MVVM {#adr-008}
+No web version (weaker guarantees). ViewModels in plain .NET so they can be tested on any OS.
 
-## ADR-009 · SQLCipher con clave en el almacén seguro {#adr-009}
-Clave aleatoria de 256 bits en el Keystore, modo de clave cruda. La app se niega a abrir una base sin cifrar.
+## ADR-009 · SQLCipher with the key in the secure store {#adr-009}
+A random 256-bit key in the Keystore, raw-key mode. The app refuses to open an unencrypted database.
 
-## ADR-010 · Licencias {#adr-010}
-AGPL-3.0 para el código (los derivados, incluido un servidor modificado ofrecido como servicio,
-siguen siendo auditables), CC BY 4.0 para la especificación, DCO para las contribuciones.
+## ADR-010 · Licensing {#adr-010}
+AGPL-3.0 for the code (derivatives, including a modified server offered as a service,
+stay auditable), CC BY 4.0 for the specification, DCO for contributions.
 
-## ADR-011 · Orden por relojes de Lamport {#adr-011}
-Orden total `(lamport, creación, id)`, idéntico en ambos teléfonos e inmune al desfase de relojes.
+## ADR-011 · Ordering by Lamport clocks {#adr-011}
+Total order `(lamport, creation, id)`, identical on both phones and immune to clock skew.
+
+## ADR-012 · Background delivery and "Always available" {#adr-012}
+**A.** A WorkManager job (every 15 minutes when there is a network, plus one when leaving the app)
+starts the client and drains the outbox: the sender no longer has to open the app. **B.** An optional
+foreground service, with its persistent notification, keeps the phone reachable with the app closed
+and comes back after a reboot. Notifications never show the message text and the server still
+stores nothing. *Cost:* somewhat more battery with B; iOS will need a different solution.

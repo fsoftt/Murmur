@@ -1,56 +1,56 @@
-# NAT, STUN, ICE, TURN y WebRTC
+# NAT, STUN, ICE, TURN and WebRTC
 
-## Por qué conectar dos teléfonos es difícil
+## Why connecting two phones is hard
 
-Tu router comparte **una** IP pública entre todos tus dispositivos (**NAT**). Desde fuera nadie puede
-abrir una conexión hacia tu teléfono: el router no sabe a cuál de tus dispositivos entregarla. Los
-operadores móviles añaden otra capa (**CGNAT**).
+Your router shares **one** public IP address among all your devices (**NAT**). Nobody outside can
+open a connection to your phone: the router does not know which of your devices to deliver it to.
+Mobile carriers add yet another layer (**CGNAT**).
 
 ```mermaid
 flowchart LR
-    T1[📱 Ana<br/>192.168.1.20] --> R1[Router de Ana<br/>IP pública 88.1.2.3]
+    T1[📱 Ana<br/>192.168.1.20] --> R1[Ana's router<br/>public IP 88.1.2.3]
     R1 --> I((Internet))
-    I --> R2[CGNAT del operador<br/>IP compartida]
+    I --> R2[Carrier CGNAT<br/>shared IP]
     R2 --> T2[📱 Beto<br/>10.64.3.9]
 ```
 
-## Las piezas
+## The pieces
 
-| Pieza | Qué hace |
+| Piece | What it does |
 |---|---|
-| **STUN** | Un servidor sencillo que te dice "así te veo desde Internet" (tu IP y puerto públicos). |
-| **ICE** | Reúne todas las rutas posibles (red local, IP pública vía STUN, relay) y las prueba por parejas hasta que una funciona. |
-| **Hole punching** | Ambos envían paquetes a la vez para que sus routers "abran la puerta" a la respuesta. |
-| **TURN** | Un servidor que **reenvía** todo el tráfico cuando no hay ruta directa. |
-| **WebRTC DataChannel** | Un estándar que empaqueta ICE, STUN, TURN y cifrado DTLS, y da un canal fiable y ordenado. |
+| **STUN** | A simple server that tells you "this is how I see you from the Internet" (your public IP and port). |
+| **ICE** | Gathers every possible route (local network, public IP via STUN, relay) and tries them in pairs until one works. |
+| **Hole punching** | Both sides send packets at the same time so their routers "open the door" to the reply. |
+| **TURN** | A server that **forwards** all traffic when there is no direct route. |
+| **WebRTC DataChannel** | A standard that bundles ICE, STUN, TURN and DTLS encryption, and provides a reliable, ordered channel. |
 
 ```mermaid
 sequenceDiagram
     participant A as Ana
     participant S as Signaling (relay)
     participant B as Beto
-    A->>A: reúne candidatos (local, STUN)
-    A->>S: oferta SDP con candidatos
-    S->>B: oferta
-    B->>B: reúne candidatos
-    B->>S: respuesta SDP
-    S->>A: respuesta
-    A-->>B: ICE prueba parejas de candidatos
-    Note over A,B: Ruta directa encontrada → DataChannel abierto<br/>Encima: Noise_KK
+    A->>A: gathers candidates (local, STUN)
+    A->>S: SDP offer with candidates
+    S->>B: offer
+    B->>B: gathers candidates
+    B->>S: SDP answer
+    S->>A: answer
+    A-->>B: ICE tries candidate pairs
+    Note over A,B: Direct route found → DataChannel open<br/>On top: Noise_KK
 ```
 
-## Las decisiones de Murmur
+## Murmur's decisions
 
-- **Sin TURN** en el MVP ([ADR-002](/guide/decisions#adr-002)): no queremos un servidor que retransmita
-  el tráfico. Algunas redes no tendrán ruta directa y los mensajes seguirán pendientes. Hay que
-  **medir** cuántas antes de decidir para siempre.
-- **No confiamos en el cifrado de WebRTC:** Noise va por encima, así que el transporte solo tiene que
-  ser fiable y ordenado.
-- **Transporte intercambiable:** todo habla con `IPeerLink`. Hoy existen la red simulada de los tests
-  y el relay de desarrollo; WebRTC llega en la fase 4 mediante un binding de `stream-webrtc-android`
-  ([ADR-003](/guide/decisions#adr-003)).
-- **Tu contacto ve tu IP pública**: es inherente a una conexión directa.
+- **No TURN** in the MVP ([ADR-002](/guide/decisions#adr-002)): we do not want a server relaying the
+  traffic. Some networks will have no direct route and messages will stay pending. We need to
+  **measure** how many before deciding for good.
+- **We do not rely on WebRTC's encryption:** Noise runs on top, so the transport only has to be
+  reliable and ordered.
+- **Swappable transport:** everything talks to `IPeerLink`. Today there is the simulated network used
+  by the tests and the development relay; WebRTC arrives in phase 4 through a binding of
+  `stream-webrtc-android` ([ADR-003](/guide/decisions#adr-003)).
+- **Your contact sees your public IP address**: this is inherent to a direct connection.
 
-**En el código:** [`IPeerLink.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Networking/Links/IPeerLink.cs) ·
+**In the code:** [`IPeerLink.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Networking/Links/IPeerLink.cs) ·
 [`InMemoryPeerLinkNetwork.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Networking/Links/InMemoryPeerLinkNetwork.cs) ·
 [`DevRelayPeerLinkFactory.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Networking/Links/DevRelayPeerLinkFactory.cs)

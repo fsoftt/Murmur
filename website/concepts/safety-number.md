@@ -1,29 +1,30 @@
-# Código de seguridad
+# Safety number
 
-## Para qué sirve
+## What it is for
 
-Si alguien interceptara el QR y se emparejara haciéndose pasar por tu contacto, todo funcionaría,
-pero con **su** clave. El código de seguridad lo detecta: son 60 dígitos calculados a partir de las
-dos claves de identidad, y **ambos teléfonos deben mostrar los mismos**.
+If someone intercepted the QR code and paired with you while pretending to be your contact,
+everything would work, but with **their** key. The safety number detects this: it is 60 digits
+computed from the two identity keys, and **both phones must show the same digits**.
 
 ```text
 12345 67890 13579 24680 11223 34455
 66778 89900 10293 84756 56473 82910
 ```
 
-## Cómo se calcula
+## How it is computed
 
-Sigue el diseño del *safety number* de Signal:
+It follows the design of Signal's *safety number*:
 
-1. Para cada clave de identidad: `SHA-512(versión ‖ clave ‖ "Murmur")` y después **5 200** veces
-   `SHA-512(hash ‖ clave)`. Las iteraciones encarecen buscar una clave falsa con un código parecido.
-2. Se toman 30 bytes, en 6 bloques de 5, y cada bloque se convierte en 5 dígitos → 30 dígitos por persona.
-3. Se concatenan las dos mitades **en orden** para que ambos teléfonos muestren lo mismo.
+1. For each identity key: `SHA-512(version ‖ key ‖ "Murmur")`, then `SHA-512(hash ‖ key)` repeated
+   **5,200** times. The iterations make it more expensive to search for a fake key with a similar
+   number.
+2. 30 bytes are taken, in 6 blocks of 5, and each block becomes 5 digits → 30 digits per person.
+3. The two halves are concatenated **in a fixed order** so that both phones show the same thing.
 
-## Cómo usarlo
+## How to use it
 
-Comparadlo una vez, en persona o por un canal de confianza, y marcad el contacto como
-**verificado**. Mientras no lo hagáis, la app lo indica en el chat.
+Compare it once, in person or over a trusted channel, and mark the contact as **verified**. Until
+you do, the app points this out in the chat.
 
-**En el código:** [`SafetyNumber.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Security/Identity/SafetyNumber.cs) ·
+**In the code:** [`SafetyNumber.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Security/Identity/SafetyNumber.cs) ·
 [`ContactDetailsViewModel.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Presentation/ViewModels/ContactDetailsViewModel.cs)

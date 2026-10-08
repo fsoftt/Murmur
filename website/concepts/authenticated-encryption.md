@@ -1,44 +1,45 @@
-# Cifrado autenticado y nonces
+# Authenticated encryption and nonces
 
-## AEAD: ocultar y detectar cambios
+## AEAD: hiding content and detecting changes
 
-Murmur cifra cada mensaje con **ChaCha20-Poly1305**, un algoritmo **AEAD**
+Murmur encrypts every message with **ChaCha20-Poly1305**, an **AEAD** algorithm
 (*Authenticated Encryption with Associated Data*):
 
-- **ChaCha20** oculta el contenido.
-- **Poly1305** añade una etiqueta de 16 bytes que detecta **cualquier** modificación. Si cambia un
-  solo bit, el descifrado falla.
+- **ChaCha20** hides the content.
+- **Poly1305** adds a 16-byte tag that detects **any** modification. If a single bit changes,
+  decryption fails.
 
-En Murmur, un fallo de autenticación **cierra la sesión** inmediatamente, y la conexión se vuelve a
-establecer desde cero.
+In Murmur, an authentication failure **closes the session** immediately, and the connection is
+re-established from scratch.
 
-## El nonce
+## The nonce
 
-Cada cifrado necesita un **nonce** (*number used once*): un número que no debe repetirse nunca con
-la misma clave. Reutilizarlo rompe la seguridad.
+Every encryption needs a **nonce** (*number used once*): a number that must never be repeated with
+the same key. Reusing one breaks security.
 
-Noise usa un **contador**: el primer mensaje es el 0, el siguiente el 1, y así sucesivamente.
-Ambos lados lo llevan, así que no viaja por la red.
+Noise uses a **counter**: the first message is 0, the next is 1, and so on. Both sides keep track
+of it, so it never travels over the network.
 
 ```mermaid
 sequenceDiagram
-    participant A as Emisor
-    participant B as Receptor
-    A->>B: cifrado con nonce 0 ✅
-    A->>B: cifrado con nonce 1 ✅
-    Note over B: Un atacante reenvía el mensaje 1
-    A-->>B: (copia del mensaje 1) ❌ el receptor espera el nonce 2
+    participant A as Sender
+    participant B as Receiver
+    A->>B: encrypted with nonce 0 ✅
+    A->>B: encrypted with nonce 1 ✅
+    Note over B: An attacker replays message 1
+    A-->>B: (copy of message 1) ❌ the receiver expects nonce 2
 ```
 
-Consecuencias:
+Consequences:
 
-- **Replay y reordenamiento se detectan solos**: un mensaje repetido o fuera de orden no descifra.
-- **El transporte debe ser fiable y ordenado**: perder un mensaje desincroniza los contadores. Por
-  eso el relay de desarrollo limita su ritmo, para que el servidor no descarte tramas
-  ([contrapresión](./backpressure)).
-- **Cifrar y enviar deben ir juntos**: si dos hilos cifraran a la vez y enviaran en otro orden, el
-  receptor vería nonces desordenados. `SecureSession` lo serializa con un candado.
+- **Replays and reordering are detected for free**: a repeated or out-of-order message does not decrypt.
+- **The transport must be reliable and ordered**: losing a message desynchronises the counters. That
+  is why the development relay rate-limits itself, so that the server does not drop frames
+  ([backpressure](./backpressure)).
+- **Encrypting and sending must go together**: if two threads encrypted at the same time and sent in
+  a different order, the receiver would see out-of-order nonces. `SecureSession` serialises them
+  with a lock.
 
-**En el código:** [`ChaChaPoly.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Security/Primitives/ChaChaPoly.cs) ·
+**In the code:** [`ChaChaPoly.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Security/Primitives/ChaChaPoly.cs) ·
 [`CipherState.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Security/Noise/CipherState.cs) ·
 [`SecureSession.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Networking/Secure/SecureSession.cs)

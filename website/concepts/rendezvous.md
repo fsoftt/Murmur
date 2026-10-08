@@ -1,59 +1,60 @@
-# Signaling y temas de encuentro
+# Signaling and rendezvous topics
 
-## El problema
+## The problem
 
-Los teléfonos cambian de IP constantemente (casa → 5G → oficina). Para conectarse necesitan un punto
-de encuentro: el **servidor de signaling**. Pero la forma ingenua revela demasiado:
+Phones change IP address all the time (home → 5G → office). To connect, they need a meeting point:
+the **signaling server**. But the naive approach reveals too much:
 
 ```text
-Ana → servidor: "¿Está Beto conectado?"     ← el servidor aprende que Ana conoce a Beto
+Ana → server: "Is Beto online?"     ← the server learns that Ana knows Beto
 ```
 
-## La solución: temas que solo la pareja puede calcular
+## The solution: topics only the pair can compute
 
-Ana y Beto comparten un secreto que nunca enviaron: el
-[Diffie-Hellman](./keys-and-signatures#diffie-hellman-el-mismo-secreto-sin-enviarlo) de sus claves
-estáticas. De él derivan, con **HKDF**, un **tema** de 32 bytes que cambia cada día:
+Ana and Beto share a secret they never sent: the
+[Diffie-Hellman](./keys-and-signatures#diffie-hellman-the-same-secret-without-sending-it) of their
+static keys. From it they derive, with **HKDF**, a 32-byte **topic** that changes every day:
 
 ```text
-tema = HKDF-SHA256(secreto = X25519(mi estática, su estática),
-                   sal     = "Murmur/v1/rendezvous/contact",
-                   info    = día UTC)
+topic = HKDF-SHA256(secret = X25519(my static, their static),
+                    salt   = "Murmur/v1/rendezvous/contact",
+                    info   = UTC day)
 ```
 
 ```mermaid
 flowchart LR
-    A[Ana] -- "sub q3Jk0…" --> S[(Servidor)]
+    A[Ana] -- "sub q3Jk0…" --> S[(Server)]
     B[Beto] -- "sub q3Jk0…" --> S
     C[Carla] -- "sub Zx81p…" --> S
     S -- "presence q3Jk0… peers=1" --> A
     S -- "presence q3Jk0… peers=1" --> B
 ```
 
-El servidor ve "dos conexiones en el tema `q3Jk0…`", nunca nombres ni claves. Al día siguiente el
-tema es otro y no puede enlazarlos solo por él.
+The server sees "two connections on topic `q3Jk0…`", never names or keys. The next day the topic is
+different, and the server cannot link the two days from the topic alone.
 
 ## HKDF
 
-**HKDF** es una función para **derivar** valores: entra un secreto, una etiqueta (*sal*) y un
-contexto (*info*), y sale un valor de apariencia aleatoria. Etiquetas distintas dan resultados
-independientes, así que el mismo secreto sirve para el tema sin debilitar nada más.
+**HKDF** is a function for **deriving** values: you feed in a secret, a label (*salt*) and a context
+(*info*), and out comes a random-looking value. Different labels give independent results, so the
+same secret can be used for the topic without weakening anything else.
 
-## Detalles
+## Details
 
-- **Medianoche UTC:** cerca del cambio de día, cada teléfono se suscribe también al tema vecino,
-  para tolerar relojes desfasados. Ambos eligen el **menor** tema en el que el otro está presente.
-- **Quién inicia:** el de clave estática menor, para que los dos no intenten conectarse a la vez.
-- **Emparejamiento:** antes de ser contactos no hay secreto compartido; el tema se deriva del token
-  del QR.
-- **Relay:** el servidor reenvía pequeños blobs entre los miembros de un tema. Sirve para negociar la
-  conexión P2P, **no** para mensajes.
+- **UTC midnight:** close to the day change, each phone also subscribes to the neighbouring day's
+  topic, to tolerate clock skew. Both pick the **lowest** topic on which the other is present.
+- **Who initiates:** the side with the lower static key, so the two do not try to connect at the
+  same time.
+- **Pairing:** before becoming contacts there is no shared secret; the topic is derived from the
+  QR token.
+- **Relay:** the server forwards small blobs between the members of a topic. It is used to negotiate
+  the P2P connection, **not** for messages.
 
-## Lo que el servidor sigue viendo
+## What the server still sees
 
-IPs, horarios y que dos conexiones comparten un tema durante un día. Es metadata reducida, no cero
-([privacidad](/guide/privacy)).
+IP addresses, timing, and the fact that two connections share a topic for a day. It is reduced
+metadata, not zero ([privacy](/guide/privacy)).
 
-**En el código:** [`Rendezvous.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Security/Identity/Rendezvous.cs) ·
+**In the code:** [`Rendezvous.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Security/Identity/Rendezvous.cs) ·
 [`SignalingClient.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Networking/Signaling/SignalingClient.cs) ·
 [`SignalingSession.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Signaling.Server/SignalingSession.cs)

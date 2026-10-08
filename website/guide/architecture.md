@@ -1,42 +1,42 @@
-# Arquitectura
+# Architecture
 
-Murmur sigue **Clean Architecture** con **MVVM** en la presentación: las dependencias apuntan hacia
-el dominio y el dominio no conoce SQLite, Noise, WebSockets ni MAUI.
+Murmur follows **Clean Architecture** with **MVVM** in the presentation layer: dependencies point
+toward the domain, and the domain knows nothing about SQLite, Noise, WebSockets or MAUI.
 
-## Proyectos y dependencias
+## Projects and dependencies
 
 ```mermaid
 flowchart TB
-    App["Murmur.App<br/><i>Vistas XAML, servicios MAUI</i>"] --> Presentation
-    Presentation["Murmur.Presentation<br/><i>ViewModels MVVM, textos para el usuario</i>"] --> Client
-    Client["Murmur.Client<br/><i>Raíz de composición: MurmurClient</i>"] --> Networking & Storage
-    Networking["Murmur.Networking<br/><i>Signaling, enlaces P2P, sesión Noise,<br/>conexiones, emparejamiento</i>"] --> Domain & Security
-    Storage["Murmur.Storage<br/><i>SQLCipher, migraciones, repositorios</i>"] --> Domain
-    Security["Murmur.Security<br/><i>Noise, identidad, invitaciones,<br/>código de seguridad, temas</i>"] --> Protocol
+    App["Murmur.App<br/><i>XAML views, MAUI services</i>"] --> Presentation
+    Presentation["Murmur.Presentation<br/><i>MVVM ViewModels, user-facing text</i>"] --> Client
+    Client["Murmur.Client<br/><i>Composition root: MurmurClient</i>"] --> Networking & Storage
+    Networking["Murmur.Networking<br/><i>Signaling, P2P links, Noise session,<br/>connections, pairing</i>"] --> Domain & Security
+    Storage["Murmur.Storage<br/><i>SQLCipher, migrations, repositories</i>"] --> Domain
+    Security["Murmur.Security<br/><i>Noise, identity, invitations,<br/>safety number, topics</i>"] --> Protocol
     Networking --> Protocol
-    Protocol["Murmur.Protocol<br/><i>CBOR, JSON de signaling, límites</i>"]
-    Domain["Murmur.Domain<br/><i>Entidades, casos de uso, outbox/ACK,<br/>máquina de estados, puertos</i>"]
+    Protocol["Murmur.Protocol<br/><i>CBOR, signaling JSON, limits</i>"]
+    Domain["Murmur.Domain<br/><i>Entities, use cases, outbox/ACK,<br/>state machine, ports</i>"]
     Server["Murmur.Signaling.Server<br/><i>ASP.NET Core + WebSockets</i>"] --> Protocol
 
     classDef core fill:#1f6feb22,stroke:#1f6feb
     class Domain core
 ```
 
-| Proyecto | Responsabilidad | Depende de |
+| Project | Responsibility | Depends on |
 |---|---|---|
-| `Murmur.Domain` | Modelo (`Contact`, `Conversation`, `Message`), reglas, casos de uso (`SendMessage`, `ManageContacts`), motor de entrega (`ConversationSyncSession`), máquina de estados, puertos (`IMessageRepository`, `IPeerChannel`, `ISecretStore`) | nada |
-| `Murmur.Protocol` | Formatos de cable: frames CBOR, tarjetas de identidad, invitaciones, mensajes de signaling, límites | `System.Formats.Cbor` |
-| `Murmur.Security` | Noise KK/IK, claves locales, invitaciones firmadas, código de seguridad, derivación de temas | Protocol, BouncyCastle |
-| `Murmur.Storage` | `SqliteDatabase` (SQLCipher), migraciones, repositorios | Domain |
-| `Murmur.Networking` | `SignalingClient`, `IPeerLink` y sus implementaciones, `SecureSession`, `PeerConnectionManager`, `PairingService` | Domain, Protocol, Security |
-| `Murmur.Client` | `MurmurClient`: ensambla identidad, base de datos, red y casos de uso | Networking, Storage |
-| `Murmur.Presentation` | ViewModels testeables en cualquier SO | Client |
-| `Murmur.App` | Vistas, `SecureStorage`, navegación Shell, QR | Presentation |
-| `Murmur.Signaling.Server` | Presencia y relay sobre WebSocket | Protocol |
+| `Murmur.Domain` | Model (`Contact`, `Conversation`, `Message`), rules, use cases (`SendMessage`, `ManageContacts`), delivery engine (`ConversationSyncSession`), state machine, ports (`IMessageRepository`, `IPeerChannel`, `ISecretStore`) | nothing |
+| `Murmur.Protocol` | Wire formats: CBOR frames, identity cards, invitations, signaling messages, limits | `System.Formats.Cbor` |
+| `Murmur.Security` | Noise KK/IK, local keys, signed invitations, safety number, topic derivation | Protocol, BouncyCastle |
+| `Murmur.Storage` | `SqliteDatabase` (SQLCipher), migrations, repositories | Domain |
+| `Murmur.Networking` | `SignalingClient`, `IPeerLink` and its implementations, `SecureSession`, `PeerConnectionManager`, `PairingService` | Domain, Protocol, Security |
+| `Murmur.Client` | `MurmurClient`: wires together identity, database, networking and use cases | Networking, Storage |
+| `Murmur.Presentation` | ViewModels testable on any OS | Client |
+| `Murmur.App` | Views, `SecureStorage`, Shell navigation, QR | Presentation |
+| `Murmur.Signaling.Server` | Presence and relay over WebSocket | Protocol |
 
-## Los puertos del dominio
+## The domain's ports
 
-El dominio define **qué necesita**; la infraestructura decide **cómo**:
+The domain defines **what it needs**; the infrastructure decides **how**:
 
 ```mermaid
 classDiagram
@@ -63,23 +63,24 @@ classDiagram
     }
     ConversationSyncSession ..> IPeerChannel
     ConversationSyncSession ..> IMessageRepository
-    SecureSession ..|> IPeerChannel : Noise sobre IPeerLink
+    SecureSession ..|> IPeerChannel : Noise over IPeerLink
     SqliteMessageRepository ..|> IMessageRepository : SQLCipher
     MauiSecretStore ..|> ISecretStore : Android Keystore
 ```
 
-Gracias a esto, el motor de entrega se prueba con un canal en memoria y una base SQLCipher real,
-sin red, sin criptografía y sin emulador.
+Thanks to this, the delivery engine is tested with an in-memory channel and a real SQLCipher
+database, with no network, no cryptography and no emulator.
 
-## Componentes en tiempo de ejecución
+## Runtime components
 
 ```mermaid
 flowchart LR
-    subgraph Teléfono
-      UI[Vistas MAUI] --> VM[ViewModels]
+    subgraph Phone
+      UI[MAUI views] --> VM[ViewModels]
       VM --> DC[MurmurClient]
+      BG["OutboxWorker · always-available<br/>service"] --> DC
       DC --> PCM[PeerConnectionManager]
-      PCM --> CC1["ContactConnection<br/>(una por contacto)"]
+      PCM --> CC1["ContactConnection<br/>(one per contact)"]
       CC1 --> SS[SecureSession<br/>Noise]
       SS --> L[IPeerLink]
       CC1 --> CSS[ConversationSyncSession]
@@ -88,44 +89,48 @@ flowchart LR
       DC --> SC[SignalingClient]
       PCM --> SC
     end
-    SC <-- WebSocket --> SRV[Servidor de signaling]
-    L <-- "P2P (WebRTC en fase 4)" --> OTRO[Otro teléfono]
+    SC <-- WebSocket --> SRV[Signaling server]
+    L <-- "P2P (WebRTC in phase 4)" --> OTRO[Other phone]
 ```
 
-- **`PeerConnectionManager`** calcula los temas de cada contacto, se suscribe y crea una
-  `ContactConnection` por contacto no bloqueado.
-- **`ContactConnection`** espera a que el contacto esté presente, abre el enlace, hace el handshake
-  Noise y ejecuta la sincronización. Si algo falla, reintenta con backoff.
-- **`ConversationSyncSession`** vacía el outbox, retransmite lo no confirmado y guarda lo recibido.
+- **`PeerConnectionManager`** computes each contact's topics, subscribes to them and creates one
+  `ContactConnection` per non-blocked contact.
+- **`ContactConnection`** waits for the contact to be present, opens the link, performs the Noise
+  handshake and runs the sync. If anything fails, it retries with backoff.
+- **`ConversationSyncSession`** drains the outbox, retransmits anything unacknowledged and stores
+  what it receives.
+- **`ClientHost`** shares a single `MurmurClient` per process between the UI, the WorkManager job
+  (`OutboxWorker`) and the "always available" foreground service
+  ([ADR-012](/guide/decisions#adr-012)).
 
-## Transportes intercambiables
+## Pluggable transports
 
 ```mermaid
 flowchart TB
-    IPL["IPeerLink<br/>fiable · ordenado · por mensajes"]
-    IPL --- W["WebRtcPeerLink<br/><i>fase 4: binding de stream-webrtc-android</i>"]
-    IPL --- M["InMemoryPeerLinkNetwork<br/><i>tests: simula NAT y caídas</i>"]
-    IPL --- D["DevRelayPeerLinkFactory<br/><i>solo Debug: por el relay del servidor</i>"]
-    IPL --- U["UnavailablePeerLinkFactory<br/><i>Release hasta la fase 4</i>"]
-    IPL -.- F["LAN, Bluetooth, Wi-Fi Direct<br/><i>futuro</i>"]
+    IPL["IPeerLink<br/>reliable · ordered · message-based"]
+    IPL --- W["WebRtcPeerLink<br/><i>phase 4: stream-webrtc-android binding</i>"]
+    IPL --- M["InMemoryPeerLinkNetwork<br/><i>tests: simulates NAT and drops</i>"]
+    IPL --- D["DevRelayPeerLinkFactory<br/><i>Debug only: through the server relay</i>"]
+    IPL --- U["UnavailablePeerLinkFactory<br/><i>Release until phase 4</i>"]
+    IPL -.- F["LAN, Bluetooth, Wi-Fi Direct<br/><i>future</i>"]
 ```
 
-La confidencialidad la pone **Noise por encima**, así que ningún transporte necesita ser de confianza.
+Confidentiality comes from **Noise on top**, so no transport needs to be trusted.
 
-## El servidor de signaling
+## The signaling server
 
-Un único endpoint WebSocket (`/ws`). Mantiene en memoria qué conexiones están suscritas a qué tema
-y reenvía pequeños blobs opacos. **No tiene base de datos.**
+A single WebSocket endpoint (`/ws`). It keeps in memory which connections are subscribed to which
+topic and forwards small opaque blobs. **It has no database.**
 
-| Protección | Valor por defecto |
+| Protection | Default value |
 |---|---|
-| Temas por conexión | 512 |
-| Conexiones por tema | 8 |
-| Conexiones por IP (IPv6 agrupado por /64) | 32 |
-| Mensajes por conexión | 20/s, ráfaga de 100 |
-| Tamaño de trama / blob de relay | 32 KiB / 16 KiB |
-| Cola de salida | 256 (cliente lento = desconectado) |
-| Tiempo para enviar `hello` | 10 s |
+| Topics per connection | 512 |
+| Connections per topic | 8 |
+| Connections per IP (IPv6 grouped by /64) | 32 |
+| Messages per connection | 20/s, burst of 100 |
+| Frame size / relay blob size | 32 KiB / 16 KiB |
+| Outbound queue | 256 (slow client = disconnected) |
+| Time to send `hello` | 10 s |
 
-La membresía está detrás de `ITopicHub`, para poder escalar horizontalmente con pub/sub sin tocar
-el protocolo.
+Membership sits behind `ITopicHub`, so it can scale horizontally with pub/sub without touching
+the protocol.

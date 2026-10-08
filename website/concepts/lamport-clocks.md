@@ -1,42 +1,42 @@
-# Relojes de Lamport
+# Lamport clocks
 
-## El problema
+## The problem
 
-Los relojes de los teléfonos no coinciden: uno puede ir cinco minutos adelantado. Si ordenáramos por
-hora, una respuesta podría aparecer **antes** que la pregunta.
+Phone clocks do not agree: one may be five minutes fast. If we ordered messages by time, a reply
+could show up **before** the question.
 
-## La idea
+## The idea
 
-Cada conversación lleva un **contador lógico** en lugar de una hora:
+Each conversation keeps a **logical counter** instead of a time:
 
-- **Al enviar:** `contador = contador + 1` y el mensaje lleva ese valor.
-- **Al recibir:** `contador = máximo(contador, valor recibido)`.
+- **When sending:** `counter = counter + 1`, and the message carries that value.
+- **When receiving:** `counter = max(counter, received value)`.
 
 ```mermaid
 sequenceDiagram
-    participant A as Ana (reloj adelantado)
-    participant B as Beto (reloj atrasado)
-    Note over A: contador = 0
-    A->>B: "¿Vienes?" (lamport 1)
-    Note over B: contador = max(0, 1) = 1
-    B->>A: "Sí" (lamport 2)
-    Note over A,B: "Sí" va detrás de "¿Vienes?" aunque la hora de Beto sea anterior
+    participant A as Ana (clock running fast)
+    participant B as Beto (clock running slow)
+    Note over A: counter = 0
+    A->>B: "Are you coming?" (lamport 1)
+    Note over B: counter = max(0, 1) = 1
+    B->>A: "Yes" (lamport 2)
+    Note over A,B: "Yes" comes after "Are you coming?" even though Beto's time is earlier
 ```
 
-Si B responde a algo que vio, su respuesta **siempre** tiene un valor mayor. El orden respeta la
-causalidad.
+If B replies to something it has seen, its reply **always** has a higher value. The order respects
+causality.
 
-## Orden total, idéntico en ambos teléfonos
+## A total order, identical on both phones
 
-Dos mensajes escritos a la vez pueden tener el mismo valor. Se desempata con la hora de creación y,
-por último, con el id: `(lamport, creación, id)`. Ambos teléfonos tienen esos mismos tres datos, así
-que **muestran exactamente el mismo orden** (lo comprueba un test con escrituras concurrentes).
+Two messages written at the same moment can have the same value. Ties are broken by creation time
+and, finally, by id: `(lamport, created, id)`. Both phones have those same three values, so they
+**show exactly the same order** (a test with concurrent writes checks this).
 
-## Protección
+## Protection
 
-Un par malicioso podría enviar un valor enorme para llevar el contador al desbordamiento. Murmur
-acota lo recibido a `contador + 1 000 000`.
+A malicious peer could send a huge value to push the counter into overflow. Murmur caps what it
+receives at `counter + 1,000,000`.
 
-**En el código:** [`MessageRules.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Domain/Model/MessageRules.cs) ·
+**In the code:** [`MessageRules.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Domain/Model/MessageRules.cs) ·
 [`SqliteMessageRepository.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Storage/Repositories/SqliteMessageRepository.cs) ·
 [ADR-011](/guide/decisions#adr-011)

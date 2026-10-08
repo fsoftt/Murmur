@@ -1,63 +1,63 @@
-# Cómo se construyó
+# How it was built
 
-El proyecto partió de un documento de arquitectura escrito antes de una sola línea de código
-([original](https://github.com/fsoftt/Murmur/blob/main/docs/history/arquitectura-inicial.md)).
-Se construyó en pasos pequeños y verificables, siguiendo una regla:
+The project started from an architecture document written before a single line of code
+([original, in Spanish](https://github.com/fsoftt/Murmur/blob/main/docs/history/arquitectura-inicial.md)).
+It was built in small, verifiable steps, following one rule:
 
-> **Cada capa se prueba antes de construir la siguiente encima.**
+> **Every layer is tested before the next one is built on top of it.**
 
-## 1. Revisar el diseño antes de programar
+## 1. Review the design before writing code
 
-La revisión del documento inicial cambió varias decisiones:
+Reviewing the initial document changed several decisions:
 
-- **Noise en lugar de Double Ratchet.** Double Ratchet existe para mensajería asíncrona con buzón.
-  Murmur solo entrega con ambos online, así que un handshake nuevo por conexión da *forward
-  secrecy* con mucha menos complejidad ([ADR-005](/guide/decisions#adr-005)).
-- **Emparejamiento bidireccional.** El flujo inicial no explicaba cómo conoce el invitador al que
-  escanea; se resolvió con Noise_IK.
-- **Presencia privada desde el MVP**, no "en el futuro": temas derivados por pareja y rotativos.
-- **Decisiones de producto explícitas**: ambos online, IP visible para los contactos, sin recuperación.
+- **Noise instead of Double Ratchet.** Double Ratchet exists for asynchronous messaging with a mailbox.
+  Murmur only delivers when both sides are online, so a fresh handshake per connection gives *forward
+  secrecy* with far less complexity ([ADR-005](/guide/decisions#adr-005)).
+- **Two-way pairing.** The initial flow didn't explain how the inviter learns about the person who
+  scans; this was solved with Noise_IK.
+- **Private presence from the MVP**, not "in the future": per-pair, rotating topics.
+- **Explicit product decisions**: no mailbox (delivery happens when both phones are online at the same time), IP visible to contacts, no recovery.
 
-## 2. Protocolo y criptografía primero
+## 2. Protocol and cryptography first
 
-1. Formatos de cable CBOR con límites antes de parsear y claves desconocidas ignoradas.
-2. Noise transcrito de la especificación sobre primitivas de BouncyCastle.
-3. **Vectores de prueba generados con una implementación independiente** (Python `noiseprotocol`):
-   nuestra implementación produce **los mismos bytes** en cada mensaje del handshake y del transporte.
-4. Fuzzing: 20 000 entradas aleatorias o con un bit cambiado no pueden producir otra cosa que un
-   error de protocolo controlado.
+1. CBOR wire formats, with limits checked before parsing and unknown keys ignored.
+2. Noise transcribed from the specification on top of BouncyCastle primitives.
+3. **Test vectors generated with an independent implementation** (Python `noiseprotocol`):
+   our implementation produces **the same bytes** for every handshake and transport message.
+4. Fuzzing: 20,000 random or bit-flipped inputs can produce nothing but a controlled
+   protocol error.
 
-## 3. El dominio, sin infraestructura
+## 3. The domain, without infrastructure
 
-Entidades, casos de uso y el motor de entrega se escribieron contra interfaces. El motor se probó
-con un canal en memoria con inyección de fallos (ACK perdidos, cortes, reinicios) y una base
-SQLCipher real.
+Entities, use cases and the delivery engine were written against interfaces. The engine was tested
+with an in-memory channel with fault injection (lost ACKs, disconnects, restarts) and a real
+SQLCipher database.
 
-## 4. Almacenamiento cifrado
+## 4. Encrypted storage
 
-SQLCipher con clave cruda de 256 bits desde el almacén seguro. Un test abre el fichero de la base
-y comprueba que no contiene ni el texto de los mensajes ni la cabecera de SQLite.
+SQLCipher with a raw 256-bit key from the secure store. A test opens the database file
+and checks that it contains neither the message text nor the SQLite header.
 
-## 5. Red, servidor y emparejamiento
+## 5. Network, server and pairing
 
-Servidor ASP.NET Core con límites anti-abuso, cliente con reconexión y resuscripción, sesiones
-Noise sobre una abstracción de transporte y el gestor de conexiones con su máquina de estados.
-Los tests de integración levantan **el servidor real en proceso y dos dispositivos completos**.
+An ASP.NET Core server with anti-abuse limits, a client with reconnection and resubscription, Noise
+sessions over a transport abstraction, and the connection manager with its state machine.
+The integration tests spin up **the real server in-process and two complete devices**.
 
-## 6. Presentación y app
+## 6. Presentation and app
 
-ViewModels en .NET puro (testeables en Linux) y vistas MAUI encima. La app compila también para
-`net10.0`, lo que permite verificar el XAML sin el SDK de Android.
+ViewModels in plain .NET (testable on Linux) with MAUI views on top. The app also builds for
+`net10.0`, which makes it possible to check the XAML without the Android SDK.
 
-## Hallazgos por el camino
+## Findings along the way
 
-- **SIPSorcery descartado.** La librería WebRTC en C# más conocida añadió a su licencia BSD una
-  restricción de uso geopolítica. Eso la saca del open source y es incompatible con la AGPL, así que
-  la fase 4 usará un binding de `stream-webrtc-android` (Apache-2.0) ([ADR-003](/guide/decisions#adr-003)).
-- **Un test intermitente** destapó una carrera en la red simulada de los tests (no en el producto):
-  la simulación de "inalcanzable" no afectaba a intentos ya en curso.
-- **El relay de desarrollo se desincronizaba** con muchos mensajes: el servidor descartaba tramas
-  por su límite de ritmo y Noise, con nonces de contador, no tolera huecos. Se añadió un limitador
-  propio; el test de 80 mensajes falla sin él y pasa con él.
-- **`Base64Url.TryDecodeFromChars` lanza excepción** con entradas no canónicas en lugar de devolver
-  `false`: lo encontró un test de validación de temas.
+- **SIPSorcery ruled out.** The best-known C# WebRTC library added a geopolitical usage
+  restriction to its BSD license. That takes it out of open source and makes it incompatible with
+  the AGPL, so phase 4 will use a binding of `stream-webrtc-android` (Apache-2.0) ([ADR-003](/guide/decisions#adr-003)).
+- **A flaky test** uncovered a race in the tests' simulated network (not in the product):
+  simulating "unreachable" didn't affect attempts already in progress.
+- **The development relay fell out of sync** under many messages: the server dropped frames
+  because of its rate limit, and Noise, with counter nonces, doesn't tolerate gaps. A client-side
+  limiter was added; the 80-message test fails without it and passes with it.
+- **`Base64Url.TryDecodeFromChars` throws** on non-canonical input instead of returning
+  `false`: a topic-validation test caught it.

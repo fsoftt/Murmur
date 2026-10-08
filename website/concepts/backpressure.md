@@ -1,37 +1,38 @@
-# Contrapresión y token bucket
+# Backpressure and token buckets
 
-## El problema
+## The problem
 
-Un contacto (malicioso o con muchos mensajes pendientes) puede enviar miles de mensajes de golpe.
-Hay dos formas de defenderse:
+A contact (malicious, or simply with lots of pending messages) can send thousands of messages at
+once. There are two ways to defend against that:
 
-| Rechazar | Contrapresión |
+| Rejecting | Backpressure |
 |---|---|
-| Cortar la conexión o descartar | **Leer más despacio**; el emisor espera |
-| Un historial pendiente legítimo nunca termina de entregarse | Todo llega, a un ritmo acotado |
+| Drop the connection or discard messages | **Read more slowly**; the sender waits |
+| A legitimate pending backlog never finishes delivering | Everything arrives, at a bounded rate |
 
-Murmur usa **contrapresión**.
+Murmur uses **backpressure**.
 
-## El token bucket
+## The token bucket
 
-Un cubo se rellena de fichas a ritmo fijo hasta un máximo. Cada mensaje gasta una ficha. Si no quedan,
-en lugar de rechazar se **espera** a la siguiente.
+A bucket refills with tokens at a fixed rate up to a maximum. Each message spends one token. If none
+are left, instead of rejecting the message it **waits** for the next one.
 
 ```mermaid
 flowchart LR
-    R["+20 fichas/s"] --> B[("Cubo<br/>máx. 200")]
-    M[Mensaje entrante] --> T{¿Hay ficha?}
+    R["+20 tokens/s"] --> B[("Bucket<br/>max. 200")]
+    M[Incoming message] --> T{Token available?}
     B --> T
-    T -- sí --> P[Guardar y ACK]
-    T -- no --> W[Esperar a la siguiente ficha] --> P
+    T -- yes --> P[Save and ACK]
+    T -- no --> W[Wait for the next token] --> P
 ```
 
-- **Mensajes entrantes:** ráfaga de 200 y después 20 por segundo. Un historial grande se vacía rápido
-  al principio y luego a ritmo constante; un atacante no puede llenar el almacenamiento de golpe.
-- **Relay de desarrollo:** 15 tramas/s con ráfaga de 60, por debajo del límite del servidor (20/s).
-  Si el servidor descartara una trama, el [contador de nonces](./authenticated-encryption) se
-  desincronizaría y la sesión se cortaría. Un test con 80 mensajes falla sin este limitador.
-- **Servidor:** su propio token bucket por conexión; ahí sí se rechaza, porque protege un recurso compartido.
+- **Incoming messages:** a burst of 200, then 20 per second. A large backlog drains quickly at first
+  and then at a steady rate; an attacker cannot fill up storage in one go.
+- **Development relay:** 15 frames/s with a burst of 60, below the server's limit (20/s). If the
+  server dropped a frame, the [nonce counter](./authenticated-encryption) would fall out of sync and
+  the session would be cut. A test with 80 messages fails without this limiter.
+- **Server:** its own token bucket per connection; there it does reject, because it protects a shared
+  resource.
 
-**En el código:** [`TokenBucket.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Domain/Common/TokenBucket.cs) ·
+**In the code:** [`TokenBucket.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Domain/Common/TokenBucket.cs) ·
 [`ConversationSyncSession.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Domain/Delivery/ConversationSyncSession.cs)
