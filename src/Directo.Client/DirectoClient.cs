@@ -34,6 +34,7 @@ public sealed class DirectoClient : IAsyncDisposable
     private readonly ISettingsRepository _settings;
     private readonly SendMessage _sendMessage;
     private readonly RetryFailedMessage _retryFailed;
+    private readonly TimeProvider _time;
     private bool _started;
 
     private DirectoClient(
@@ -46,6 +47,7 @@ public sealed class DirectoClient : IAsyncDisposable
     {
         _keys = keys;
         _database = database;
+        _time = time;
         _contacts = new SqliteContactRepository(database);
         _conversations = new SqliteConversationRepository(database);
         _messages = new SqliteMessageRepository(database);
@@ -131,7 +133,7 @@ public sealed class DirectoClient : IAsyncDisposable
         _conversations.ListSummariesAsync(cancellationToken);
 
     public Task<Conversation> GetConversationAsync(ContactId contactId, CancellationToken cancellationToken = default) =>
-        _conversations.GetOrCreateForContactAsync(contactId, TimeProvider.System.GetUtcNow(), cancellationToken);
+        _conversations.GetOrCreateForContactAsync(contactId, _time.GetUtcNow(), cancellationToken);
 
     public Task<IReadOnlyList<Message>> LoadMessagesAsync(ConversationId conversationId, int limit = 200, CancellationToken cancellationToken = default) =>
         _messages.ListRecentAsync(conversationId, limit, cancellationToken);
