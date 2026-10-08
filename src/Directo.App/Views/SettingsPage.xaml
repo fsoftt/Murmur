@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Directo.Presentation.ViewModels;assembly=Directo.Presentation"
+             x:Class="Directo.App.Views.SettingsPage"
+             x:DataType="vm:SettingsViewModel"
+             Title="Ajustes">
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="16">
+            <Label Text="Tu nombre" Style="{StaticResource Heading}" />
+            <Label Text="Opcional. Solo lo ve quien se empareja contigo. Nunca se envía al servidor." Style="{StaticResource Muted}" />
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <Entry Text="{Binding ProfileName}" Placeholder="Nombre" />
+                <Button Grid.Column="1" Text="Guardar" Command="{Binding SaveCommand}" />
+            </Grid>
+
+            <Label Text="Servidor de encuentro" Style="{StaticResource Heading}" />
+            <Label Text="Solo ayuda a que dos teléfonos se encuentren. No guarda mensajes ni contactos. Cambiarlo requiere reiniciar la app." Style="{StaticResource Muted}" />
+            <Entry x:Name="EndpointEntry" Keyboard="Url" />
+            <Button Text="Guardar servidor" Clicked="OnSaveEndpointClicked" />
+
+            <Label Text="Identidad de este dispositivo" Style="{StaticResource Heading}" />
+            <Label Text="{Binding IdentityFingerprint}" FontFamily="monospace" />
+            <Label Text="Si pierdes este teléfono, pierdes la identidad, los contactos y el historial: no hay copia en ningún servidor."
+                   Style="{StaticResource Muted}" />
+            <Label Text="{Binding ErrorMessage}" IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNull}}" Style="{StaticResource Error}" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Directo.Presentation.ViewModels;assembly=Directo.Presentation"
+             x:Class="Directo.App.Views.ContactDetailsPage"
+             x:DataType="vm:ContactDetailsViewModel"
+             Title="Contacto">
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="16">
+            <Label Text="Nombre (solo en este dispositivo)" Style="{StaticResource Caption}" />
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <Entry Text="{Binding DisplayName}" />
+                <Button Grid.Column="1" Text="Guardar" Command="{Binding SaveNameCommand}" />
+            </Grid>
+
+            <Label Text="Código de seguridad" Style="{StaticResource Heading}" />
+            <Label Text="{Binding SafetyNumber}" FontFamily="monospace" FontSize="18" LineBreakMode="WordWrap" />
+            <Label Text="Comparad este código en persona o por un canal de confianza. Si coincide en ambos teléfonos, nadie se ha hecho pasar por vosotros."
+                   Style="{StaticResource Muted}" />
+            <Grid ColumnDefinitions="*,Auto">
+                <Label Text="He comprobado que coincide" VerticalOptions="Center" />
+                <Switch x:Name="VerifiedSwitch" Grid.Column="1" IsToggled="{Binding IsVerified, Mode=OneWay}" Toggled="OnVerifiedToggled" />
+            </Grid>
+
+            <Grid ColumnDefinitions="*,Auto">
+                <Label Text="Bloquear contacto" VerticalOptions="Center" />
+                <Switch x:Name="BlockedSwitch" Grid.Column="1" IsToggled="{Binding IsBlocked, Mode=OneWay}" Toggled="OnBlockedToggled" />
+            </Grid>
+
+            <Label Text="{Binding ErrorMessage}" IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNull}}" Style="{StaticResource Error}" />
+
+            <Button Text="Borrar historial en este dispositivo" Clicked="OnClearClicked" />
+            <Button Text="Eliminar contacto" Clicked="OnDeleteClicked" Style="{StaticResource DangerButton}" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
