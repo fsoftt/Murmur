@@ -14,22 +14,54 @@ public sealed class InMemoryPeerLinkNetwork : IPeerLinkFactory
     private readonly Dictionary<(string Topic, bool Initiator), TaskCompletionSource<InMemoryPeerLink>> _waiting = new();
     private readonly List<InMemoryPeerLink> _open = [];
 
+    private bool _reachable = true;
+
     /// <summary>When false, connection attempts hang until cancelled, as with a failed ICE negotiation.</summary>
-    public bool Reachable { get; set; } = true;
+    public bool Reachable
+    {
+        get
+        {
+            lock (_gate)
+            {
+                return _reachable;
+            }
+        }
+
+        set
+        {
+            lock (_gate)
+            {
+                _reachable = value;
+                if (!value)
+                {
+                    return;
+                }
+
+                // Attempts that were waiting while unreachable can now meet.
+                foreach (var (topic, _) in _waiting.Keys.Where(k => k.Initiator).ToList())
+                {
+                    if (_waiting.Remove((topic, false), out var responder) && _waiting.Remove((topic, true), out var initiatorSource))
+                    {
+                        var (a, b) = InMemoryPeerLink.CreatePair(Forget);
+                        _open.Add(a);
+                        _open.Add(b);
+                        ConnectionsEstablished++;
+                        initiatorSource.TrySetResult(a);
+                        responder.TrySetResult(b);
+                    }
+                }
+            }
+        }
+    }
 
     public int ConnectionsEstablished { get; private set; }
 
     public async Task<IPeerLink> ConnectAsync(PeerLinkRequest request, ISignalingChannel signaling, CancellationToken cancellationToken)
     {
-        if (!Reachable)
-        {
-            await Task.Delay(Timeout.Infinite, cancellationToken).ConfigureAwait(false);
-        }
-
         TaskCompletionSource<InMemoryPeerLink> mine;
         lock (_gate)
         {
-            if (_waiting.Remove((request.Topic, !request.IsInitiator), out var other))
+            if (_reachable && _waiting.Remove((request.Topic, !request.IsInitiator), out var other))
             {
                 var (a, b) = InMemoryPeerLink.CreatePair(Forget);
                 _open.Add(a);

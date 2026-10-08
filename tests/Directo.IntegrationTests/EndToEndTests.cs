@@ -112,9 +112,10 @@ public sealed class EndToEndTests(SignalingServerFixture server) : IClassFixture
     public async Task Unreachable_peer_keeps_messages_pending_until_a_direct_path_exists()
     {
         await PairAsync();
-        _network.DropAllLinks();
         _network.Reachable = false;
+        _network.DropAllLinks();
         var contact = await _ana.SingleContactAsync();
+        await Eventually.TrueAsync(() => _ana.Client.GetConnectionState(contact.Id) != PeerConnectionState.Connected, "the session is gone");
 
         var message = await _ana.Client.SendMessageAsync(contact.Id, "sin TURN");
         await Task.Delay(800);
