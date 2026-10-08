@@ -2,6 +2,7 @@ using System.Buffers.Binary;
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Threading.Channels;
+using Directo.Domain.Common;
 using Directo.Networking.Signaling;
 
 namespace Directo.Networking.Links;
@@ -62,6 +63,10 @@ public sealed class DevRelayPeerLinkFactory : IPeerLinkFactory
         private readonly ConcurrentQueue<ulong> _offers = new();
         private readonly TaskCompletionSource<ulong> _accepted = new(TaskCreationOptions.RunContinuationsAsynchronously);
         private readonly SemaphoreSlim _sendLock = new(1, 1);
+
+        // Stay under the server's per-connection relay limit (20/s, burst 100 by default):
+        // a dropped frame would desynchronize the Noise transport and end the session.
+        private readonly TokenBucket _pace = new(15, 60, TimeProvider.System);
         private readonly SemaphoreSlim _offerArrived = new(0);
         private readonly List<byte> _partial = [];
         private ulong _linkId;
@@ -169,6 +174,7 @@ public sealed class DevRelayPeerLinkFactory : IPeerLinkFactory
 
         private async Task SendFrameAsync(FrameType type, ReadOnlyMemory<byte> payload, CancellationToken cancellationToken)
         {
+            await _pace.WaitAsync(cancellationToken).ConfigureAwait(false);
             var frame = new byte[HeaderSize + payload.Length];
             frame[0] = (byte)type;
             BinaryPrimitives.WriteUInt64BigEndian(frame.AsSpan(1), _linkId);

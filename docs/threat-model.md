@@ -19,7 +19,7 @@ datos · lista de contactos · grafo social (quién habla con quién) · IP y ho
 | **Quien ve tu QR de lejos** | Token de un solo uso, caducidad corta (10 min), el contacto queda "sin verificar". | Si escanea antes que la persona legítima, se empareja él. Mitigación: comparar el **código de seguridad**. |
 | **Robo del teléfono bloqueado** | Base SQLCipher; clave y claves privadas en Android Keystore. | Depende de la seguridad del SO y del bloqueo de pantalla. |
 | **Dispositivo desbloqueado o con malware** | **Fuera de alcance.** | La seguridad de extremo a extremo termina en los extremos. |
-| **Par malicioso que envía datos hostiles** | Límites antes de parsear, CBOR estricto, reloj Lamport acotado, ACK solo sobre salientes de esa conversación, sesión cerrada ante fallos. | Puede inundar con mensajes válidos (pendiente: límites por contacto). |
+| **Par malicioso que envía datos hostiles** | Límites antes de parsear, CBOR estricto, reloj Lamport acotado, ACK solo sobre salientes de esa conversación, sesión cerrada ante fallos. | Si inunda con mensajes válidos, el receptor aplica contrapresión: lee a 20 mensajes/s tras una ráfaga de 200, sin cortar la sesión, para que un historial pendiente legítimo siga entregándose. |
 | **Abuso del servidor** | Límites por conexión, por IP (/64 en IPv6), por tema, token bucket, cola acotada. | Un atacante con muchas IPs aún puede saturar. |
 
 ## Propiedades criptográficas

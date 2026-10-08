@@ -123,6 +123,23 @@ public sealed class DeliveryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task A_flooding_peer_is_slowed_down_but_everything_arrives()
+    {
+        const int count = 30;
+        for (var i = 0; i < count; i++)
+        {
+            await _alice.SendAsync($"flood {i}");
+        }
+
+        var started = System.Diagnostics.Stopwatch.StartNew();
+        await using var link = Connect(bobOptions: FastRetransmission with { IncomingMessagesPerSecond = 50, IncomingBurst = 5 });
+        await Eventually.TrueAsync(async () => (await _bob.HistoryAsync()).Count == count, "Bob stored the whole backlog");
+
+        // 5 at full speed, then 25 more at 50/s: at least ~0.5 s.
+        Assert.True(started.Elapsed >= TimeSpan.FromMilliseconds(400), $"Took only {started.Elapsed}.");
+    }
+
+    [Fact]
     public async Task Session_ends_when_the_channel_closes()
     {
         var link = Connect();
@@ -133,13 +150,13 @@ public sealed class DeliveryTests : IAsyncLifetime
         await link.DisposeAsync();
     }
 
-    private Link Connect(Func<PeerEvent, bool>? aliceFilter = null, Func<PeerEvent, bool>? bobFilter = null)
+    private Link Connect(Func<PeerEvent, bool>? aliceFilter = null, Func<PeerEvent, bool>? bobFilter = null, DeliveryOptions? bobOptions = null)
     {
         var (a, b) = FakePeerChannel.CreatePair();
         a.Filter = aliceFilter ?? (_ => true);
         b.Filter = bobFilter ?? (_ => true);
         var cts = new CancellationTokenSource();
-        return new Link(a, _alice.Run(a, cts.Token), _bob.Run(b, cts.Token), cts);
+        return new Link(a, _alice.Run(a, cts.Token), _bob.Run(b, cts.Token, bobOptions), cts);
     }
 
     private sealed record Link(FakePeerChannel AliceChannel, Task AliceSession, Task BobSession, CancellationTokenSource Cancellation) : IAsyncDisposable
@@ -186,9 +203,9 @@ public sealed class DeliveryTests : IAsyncLifetime
         public Task WaitDeliveredAsync(MessageId id) =>
             Eventually.TrueAsync(async () => (await Store.Messages.GetAsync(Conversation.Id, id))?.Status == MessageStatus.Delivered, $"message {id} is delivered");
 
-        public async Task Run(IPeerChannel channel, CancellationToken cancellationToken)
+        public async Task Run(IPeerChannel channel, CancellationToken cancellationToken, DeliveryOptions? options = null)
         {
-            var session = new ConversationSyncSession(Store.Messages, Store.Outbox, Store.Events, TimeProvider.System, FastRetransmission);
+            var session = new ConversationSyncSession(Store.Messages, Store.Outbox, Store.Events, TimeProvider.System, options ?? FastRetransmission);
             try
             {
                 await session.RunAsync(Conversation, channel, cancellationToken);

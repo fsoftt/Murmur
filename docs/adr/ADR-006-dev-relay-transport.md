@@ -13,6 +13,7 @@ Hasta tener el transporte WebRTC (fase 4) la app no podría emparejar ni chatear
 
 ## Consecuencias
 - Permite probar emparejamiento, cifrado, persistencia y UI en dispositivos ya.
-- Mientras se usa, el servidor ve tamaño y ritmo del tráfico cifrado, y aplica sus límites de
-  ritmo (ráfagas grandes pueden cortar la sesión, que se reintenta).
+- Mientras se usa, el servidor ve tamaño y ritmo del tráfico cifrado.
+- El enlace limita su propio ritmo (15 tramas/s, ráfaga de 60) por debajo del límite del servidor:
+  una trama descartada desincronizaría el transporte Noise y cortaría la sesión.
 - Debe eliminarse o quedar solo para tests cuando exista WebRTC.

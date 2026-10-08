@@ -9,6 +9,15 @@ public sealed record DeliveryOptions
     /// <summary>Retransmission schedule for messages transmitted without an ACK.</summary>
     public Backoff Retransmission { get; init; } = new(TimeSpan.FromSeconds(10), TimeSpan.FromMinutes(2));
 
+    /// <summary>
+    /// Sustained rate at which a contact's messages are accepted. Faster senders are slowed down
+    /// (backpressure), not disconnected, so a long offline backlog still drains.
+    /// </summary>
+    public double IncomingMessagesPerSecond { get; init; } = 20;
+
+    /// <summary>Messages accepted at full speed before the rate applies (e.g. a backlog flush).</summary>
+    public int IncomingBurst { get; init; } = 200;
+
     public static DeliveryOptions Default { get; } = new();
 }
 
@@ -55,11 +64,14 @@ public sealed class ConversationSyncSession(
 
     private async Task ReceiveLoopAsync(ConversationId conversationId, IPeerChannel channel, CancellationToken cancellationToken)
     {
+        var incoming = new TokenBucket(_options.IncomingMessagesPerSecond, _options.IncomingBurst, time);
         await foreach (var peerEvent in channel.ReadEventsAsync(cancellationToken).ConfigureAwait(false))
         {
             switch (peerEvent)
             {
                 case PeerMessageReceived received:
+                    // Bounds how fast a misbehaving contact can fill local storage.
+                    await incoming.WaitAsync(cancellationToken).ConfigureAwait(false);
                     await StoreIncomingAsync(conversationId, received, cancellationToken).ConfigureAwait(false);
 
                     // ACK only after the message is durably stored, and also for duplicates:
