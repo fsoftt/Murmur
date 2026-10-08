@@ -1,5 +1,5 @@
-using Murmur.Domain.Model;
 using Microsoft.Data.Sqlite;
+using Murmur.Domain.Model;
 
 namespace Murmur.Storage.Database;
 

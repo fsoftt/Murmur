@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Murmur.Domain.Common;
 using Murmur.Domain.Connections;
 using Murmur.Domain.Delivery;
@@ -7,7 +8,6 @@ using Murmur.Networking.Links;
 using Murmur.Networking.Secure;
 using Murmur.Networking.Signaling;
 using Murmur.Security.Identity;
-using Microsoft.Extensions.Logging;
 
 namespace Murmur.Networking.Sessions;
 
