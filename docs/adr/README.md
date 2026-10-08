@@ -13,5 +13,6 @@
 | [009](ADR-009-sqlcipher-storage.md) | SQLCipher con clave en Keystore |
 | [010](ADR-010-licensing.md) | AGPL-3.0 para código, CC BY 4.0 para la especificación |
 | [011](ADR-011-lamport-ordering.md) | Orden por relojes de Lamport |
+| [012](ADR-012-background-delivery.md) | Entrega en segundo plano y modo "siempre disponible" |
 
 Formato: Contexto · Decisión · Consecuencias. Un ADR aceptado no se edita; se reemplaza por otro.

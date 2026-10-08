@@ -35,6 +35,10 @@
     <PackageReference Include="ZXing.Net.Maui.Controls" />
   </ItemGroup>
 
+  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+    <PackageReference Include="Xamarin.AndroidX.Work.Runtime" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Murmur.Presentation\Murmur.Presentation.csproj" />
   </ItemGroup>

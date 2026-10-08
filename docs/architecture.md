@@ -17,8 +17,8 @@ Principio rector:
 
 | Tema | Decisión | Consecuencia que el usuario debe entender |
 |---|---|---|
-| Entrega | Solo cuando **ambos dispositivos están online a la vez** ([ADR-001](adr/ADR-001-local-first.md)) | Si escribes y cierras la app antes de que el otro se conecte, el mensaje espera en **tu** teléfono. |
-| Segundo plano | En el MVP la app entrega mensajes **mientras está abierta**. Android e iOS cortan los sockets en segundo plano. | En la práctica, ambos deben abrir la app en algún momento común. Las notificaciones push se estudiarán aparte por la metadata que exponen. |
+| Entrega | Solo cuando **ambos dispositivos son alcanzables a la vez** ([ADR-001](adr/ADR-001-local-first.md)) | Si el otro no está disponible, el mensaje espera en **tu** teléfono. Ningún servidor lo guarda. |
+| Segundo plano | En Android, un trabajo periódico intenta entregar lo pendiente con la app cerrada, y el modo opcional **"siempre disponible"** mantiene el teléfono localizable para recibir ([ADR-012](adr/ADR-012-background-delivery.md)). | Sin ese modo, el receptor tiene que estar usando la app. iOS necesitará un aviso push sin contenido (decisión aparte). |
 | Relay | **Sin TURN** en el MVP ([ADR-002](adr/ADR-002-no-turn-mvp.md)) | Algunas redes (CGNAT simétrico, redes corporativas) nunca conectarán; los mensajes quedan pendientes. Se medirá antes de decidir. |
 | IP | P2P significa que **cada contacto ve tu IP pública** mientras habláis. | Diferencia de privacidad importante frente a apps con servidor central; se explica en el onboarding. |
 | Recuperación | **Sin recuperación** en el MVP. | Perder el teléfono = perder identidad, contactos e historial. |
@@ -160,7 +160,18 @@ ASP.NET Core, un solo endpoint WebSocket (`/ws`) y `/healthz`.
 
 ---
 
-## 10. Ciclo de vida móvil
+## 10. Segundo plano (Android)
+
+- **Entrega en segundo plano:** WorkManager ejecuta cada 15 min (con red) y al salir de la app
+  `DeliverPendingAsync`: arranca el cliente y espera hasta que no quede nada pendiente o se agote el
+  presupuesto de tiempo.
+- **Siempre disponible:** servicio en primer plano `remoteMessaging` con notificación permanente,
+  reanudado al abrir la app y al reiniciar el teléfono. Avisa si la optimización de batería puede
+  pausarlo.
+- **Notificaciones de mensajes:** solo "Nuevo mensaje" y el nombre local; nunca el texto.
+- Un único `MurmurClient` por proceso (`ClientHost`), compartido por la interfaz, el trabajo y el servicio.
+
+## 11. Ciclo de vida móvil
 
 Al abrir la app: restaurar estado local → abrir base cifrada → conectar signaling → derivar
 temas → reconstruir presencia → abrir sesiones → vaciar outbox. Ningún estado crítico vive solo
@@ -168,7 +179,7 @@ en memoria; matar la app en cualquier punto no pierde mensajes (cubierto por tes
 
 ---
 
-## 11. Hoja de ruta
+## 12. Hoja de ruta
 
 | Fase | Estado |
 |---|---|
@@ -177,7 +188,8 @@ en memoria; matar la app en cualquier punto no pierde mensajes (cubierto por tes
 | 3. Signaling (WebSocket, presencia, reconexión, límites) | ✅ |
 | 4. P2P real (WebRTC DataChannel vía binding de `stream-webrtc-android`) | ⏳ siguiente |
 | 5. Mensajes E2EE, outbox, ACK, idempotencia, reintentos, estados UI | ✅ (sobre transporte simulado y relay de desarrollo) |
-| 6. Robustez en dispositivos reales (segundo plano, cambios de red, métricas) | ⏳ |
+| 6. Robustez: entrega en segundo plano y modo "siempre disponible" (Android) | ✅ |
+| 6b. Robustez en dispositivos reales (cambios de red, métricas, push para iOS) | ⏳ |
 | 7. Adjuntos por fragmentos con reanudación | ⏳ |
 
 Fuera del MVP: grupos, llamadas, backups, multi-dispositivo completo, TURN propio, Bluetooth,
@@ -185,7 +197,7 @@ Wi-Fi Direct, directorio de usuarios.
 
 ---
 
-## 12. Checklist para nuevas funcionalidades
+## 13. Checklist para nuevas funcionalidades
 
 1. ¿Puede hacerse localmente? 2. ¿Qué datos nuevos conocería el servidor, por qué y durante
 cuánto tiempo? 3. ¿Qué pasa si el servidor o un dispositivo se compromete? 4. ¿Qué metadata

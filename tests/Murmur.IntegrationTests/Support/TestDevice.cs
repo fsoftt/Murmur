@@ -46,7 +46,13 @@ public sealed class TestDevice : IAsyncDisposable
         return device;
     }
 
-    public async Task StartAsync()
+    public async Task StartAsync() => await OpenAsync(start: true);
+
+    /// <summary>
+    /// Opens the device without starting networking, as when Android launches the process only
+    /// to run a background job.
+    /// </summary>
+    public async Task OpenAsync(bool start)
     {
         Client = await MurmurClient.OpenAsync(
             new MurmurClientOptions
@@ -60,7 +66,11 @@ public sealed class TestDevice : IAsyncDisposable
             _secrets,
             _network,
             loggerFactory: Logs);
-        await Client.StartAsync();
+        if (start)
+        {
+            await Client.StartAsync();
+        }
+
         IsRunning = true;
     }
 

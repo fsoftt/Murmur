@@ -38,6 +38,13 @@ public static class MauiProgram
 
         var services = builder.Services;
         services.AddSingleton<ISecretStore, MauiSecretStore>();
+#if ANDROID
+        services.AddSingleton<IAvailabilityService, Platforms.Android.Background.AndroidAvailabilityService>();
+        services.AddSingleton<IIncomingMessageNotifier, Platforms.Android.Background.AndroidMessageNotifier>();
+#else
+        services.AddSingleton<IAvailabilityService, UnsupportedAvailabilityService>();
+        services.AddSingleton<IIncomingMessageNotifier, NoIncomingMessageNotifier>();
+#endif
         services.AddSingleton<IUiDispatcher, MauiDispatcher>();
         services.AddSingleton<INavigator, ShellNavigator>();
         services.AddSingleton<AppSettings>();
