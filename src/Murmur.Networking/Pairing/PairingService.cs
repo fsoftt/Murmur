@@ -1,4 +1,6 @@
 using System.Security.Cryptography;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Murmur.Domain.Common;
 using Murmur.Domain.Model;
 using Murmur.Domain.Ports;
@@ -7,8 +9,6 @@ using Murmur.Networking.Secure;
 using Murmur.Networking.Signaling;
 using Murmur.Protocol;
 using Murmur.Security.Identity;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Murmur.Networking.Pairing;
 

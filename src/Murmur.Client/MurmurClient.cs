@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Murmur.Domain.Common;
 using Murmur.Domain.Connections;
 using Murmur.Domain.Delivery;
@@ -11,8 +13,6 @@ using Murmur.Networking.Signaling;
 using Murmur.Security.Identity;
 using Murmur.Storage.Database;
 using Murmur.Storage.Repositories;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Murmur.Client;
 

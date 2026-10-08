@@ -1,7 +1,7 @@
+using Microsoft.Data.Sqlite;
 using Murmur.Domain.Model;
 using Murmur.Domain.Ports;
 using Murmur.Storage.Database;
-using Microsoft.Data.Sqlite;
 using static Murmur.Storage.Database.SqlMapping;
 
 namespace Murmur.Storage.Repositories;

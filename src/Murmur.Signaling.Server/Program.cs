@@ -1,5 +1,5 @@
-using Murmur.Signaling.Server;
 using Microsoft.Extensions.Options;
+using Murmur.Signaling.Server;
 
 var builder = WebApplication.CreateBuilder(args);
 
