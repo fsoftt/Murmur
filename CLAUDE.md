@@ -8,3 +8,6 @@
 - Never log message plaintext, keys, tokens, invites or rendezvous topics.
 - Build and test: `dotnet test Directo.slnx` (the MAUI app is not part of the solution filter
   used on Linux; see `README.md`).
+- The project site lives in `website/` (VitePress, deployed by `.github/workflows/pages.yml`).
+  When behaviour, architecture or decisions change, update `README.md`, `docs/` and `website/` together.
+  Check it locally with `cd website && npm ci && npm run build`.
