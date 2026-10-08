@@ -31,6 +31,27 @@
                     </VerticalStackLayout>
                 </Border>
 
+                <Border Style="{StaticResource Card}" IsVisible="{Binding AvailabilitySupported}">
+                    <VerticalStackLayout Spacing="10">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            <Label Text="Siempre disponible" Style="{StaticResource Heading}" FontSize="17" VerticalOptions="Center" />
+                            <Switch x:Name="AlwaysAvailableSwitch" Grid.Column="1" IsToggled="{Binding AlwaysAvailable, Mode=OneWay}" Toggled="OnAlwaysAvailableToggled" />
+                        </Grid>
+                        <Label Style="{StaticResource Muted}" FontSize="13"
+                               Text="Tus contactos pueden enviarte mensajes aunque tengas la app cerrada. Android mostrará un aviso permanente y gastará algo más de batería. Nada se guarda en el servidor: tu teléfono sigue siendo el que recibe." />
+                        <Border IsVisible="{Binding ShowBatteryWarning}" StrokeThickness="0" StrokeShape="RoundRectangle 14" Padding="12,10"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource AmberSoftLight}, Dark={StaticResource AmberSoftDark}}">
+                            <VerticalStackLayout Spacing="8">
+                                <Label FontSize="13" TextColor="{AppThemeBinding Light={StaticResource AmberLight}, Dark={StaticResource AmberDark}}"
+                                       Text="Android puede pausar Murmur para ahorrar batería. Para que sea fiable, quítalo de la optimización de batería." />
+                                <Button Text="Abrir ajustes de batería" Style="{StaticResource SecondaryButton}" Command="{Binding OpenBatterySettingsCommand}" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Label Style="{StaticResource Caption}"
+                               Text="Aunque esté desactivado, Murmur intenta enviar tus mensajes pendientes cada 15 minutos en segundo plano." />
+                    </VerticalStackLayout>
+                </Border>
+
                 <Border Style="{StaticResource Card}">
                     <VerticalStackLayout Spacing="10">
                         <Label Text="Servidor de encuentro" Style="{StaticResource Heading}" FontSize="17" />

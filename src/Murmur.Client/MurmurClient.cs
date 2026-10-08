@@ -141,6 +141,57 @@ public sealed class MurmurClient : IAsyncDisposable
 
     public PeerConnectionState GetConnectionState(ContactId contactId) => _connections.GetState(contactId);
 
+    /// <summary>Outgoing messages still waiting for an acknowledgement, across all conversations.</summary>
+    public Task<int> CountUndeliveredAsync(CancellationToken cancellationToken = default) =>
+        _messages.CountUndeliveredAsync(cancellationToken);
+
+    /// <summary>The contact a conversation belongs to (e.g. to name the sender in a notification).</summary>
+    public async Task<Contact?> FindContactForConversationAsync(ConversationId conversationId, CancellationToken cancellationToken = default) =>
+        await _conversations.GetAsync(conversationId, cancellationToken).ConfigureAwait(false) is { } conversation
+            ? await _contacts.GetAsync(conversation.ContactId, cancellationToken).ConfigureAwait(false)
+            : null;
+
+    /// <summary>
+    /// Background delivery pass (option A): makes sure the client is running and waits, up to
+    /// <paramref name="budget"/>, until every pending message is acknowledged. Delivery still
+    /// needs the recipient to be reachable at that moment; nothing is stored on any server.
+    /// </summary>
+    /// <returns>The number of messages still undelivered when the pass ends.</returns>
+    public async Task<int> DeliverPendingAsync(TimeSpan budget, CancellationToken cancellationToken = default)
+    {
+        if (await CountUndeliveredAsync(cancellationToken).ConfigureAwait(false) == 0)
+        {
+            return 0;
+        }
+
+        await StartAsync(cancellationToken).ConfigureAwait(false);
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(budget);
+        var pending = Undelivered.Wait(Events);
+        try
+        {
+            while (true)
+            {
+                var remaining = await CountUndeliveredAsync(timeout.Token).ConfigureAwait(false);
+                if (remaining == 0)
+                {
+                    return 0;
+                }
+
+                // Re-check on every delivery event, and periodically as a safety net.
+                await pending.NextAsync(TimeSpan.FromSeconds(5), timeout.Token).ConfigureAwait(false);
+            }
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return await CountUndeliveredAsync(CancellationToken.None).ConfigureAwait(false);
+        }
+        finally
+        {
+            pending.Dispose();
+        }
+    }
+
     /// <summary>The 60-digit code both users compare to rule out an impersonated QR code.</summary>
     public async Task<string> GetSafetyNumberAsync(ContactId contactId, CancellationToken cancellationToken = default)
     {
@@ -176,4 +227,37 @@ public sealed class MurmurClient : IAsyncDisposable
         await _database.DisposeAsync().ConfigureAwait(false);
         _keys.Dispose();
     }
+}
+
+/// <summary>Wakes a waiter whenever a message status changes.</summary>
+internal sealed class Undelivered : IDisposable
+{
+    private readonly ChatEvents _events;
+    private readonly AsyncSignal _changed = new();
+
+    private Undelivered(ChatEvents events)
+    {
+        _events = events;
+        _events.MessageStatusChanged += OnChanged;
+    }
+
+    public static Undelivered Wait(ChatEvents events) => new(events);
+
+    public async Task NextAsync(TimeSpan atMost, CancellationToken cancellationToken)
+    {
+        using var slice = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        slice.CancelAfter(atMost);
+        try
+        {
+            await _changed.WaitAsync(slice.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            // Periodic re-check.
+        }
+    }
+
+    public void Dispose() => _events.MessageStatusChanged -= OnChanged;
+
+    private void OnChanged(object? sender, MessageStatusChange e) => _changed.Set();
 }

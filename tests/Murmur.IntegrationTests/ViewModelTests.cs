@@ -114,6 +114,27 @@ public sealed class ViewModelTests(SignalingServerFixture server) : IClassFixtur
     }
 
     [Fact]
+    public async Task Always_available_mode_is_toggled_and_warns_about_battery_optimization()
+    {
+        var availability = new FakeAvailability { BatteryOptimized = true };
+        var settings = new SettingsViewModel(_ana.Client, availability);
+        await settings.LoadAsync();
+        Assert.True(settings.AvailabilitySupported);
+        Assert.False(settings.AlwaysAvailable);
+
+        await settings.SetAlwaysAvailableCommand.ExecuteAsync(true);
+
+        Assert.True(settings.AlwaysAvailable);
+        Assert.True(settings.ShowBatteryWarning);
+
+        availability.DenyNotifications = true;
+        await settings.SetAlwaysAvailableCommand.ExecuteAsync(false);
+        await settings.SetAlwaysAvailableCommand.ExecuteAsync(true);
+        Assert.False(settings.AlwaysAvailable);
+        Assert.NotNull(settings.ErrorMessage);
+    }
+
+    [Fact]
     public async Task Incoming_messages_appear_in_the_open_chat()
     {
         await PairAsync();
@@ -163,6 +184,37 @@ public sealed class ViewModelTests(SignalingServerFixture server) : IClassFixtur
         var invite = await _beto.Client.CreateInviteAsync();
         await _ana.Client.AcceptInviteAsync(invite.Text);
         await Eventually.TrueAsync(async () => (await _beto.Client.Contacts.ListAsync()).Count == 1, "Beto stored the contact");
+    }
+
+    private sealed class FakeAvailability : IAvailabilityService
+    {
+        public bool DenyNotifications { get; set; }
+
+        public bool BatteryOptimized { get; set; }
+
+        public bool IsSupported => true;
+
+        public bool IsAlwaysAvailable { get; private set; }
+
+        public bool IsBatteryOptimized => BatteryOptimized;
+
+        public Task<bool> SetAlwaysAvailableAsync(bool enabled)
+        {
+            IsAlwaysAvailable = enabled && !DenyNotifications;
+            return Task.FromResult(IsAlwaysAvailable);
+        }
+
+        public void ScheduleBackgroundDelivery()
+        {
+        }
+
+        public void ResumeIfEnabled()
+        {
+        }
+
+        public void OpenBatterySettings()
+        {
+        }
     }
 
     private sealed class FakeNavigator : INavigator

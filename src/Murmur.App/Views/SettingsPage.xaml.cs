@@ -22,6 +22,15 @@ public partial class SettingsPage : ContentPage
         await _viewModel.LoadAsync();
     }
 
+    private async void OnAlwaysAvailableToggled(object? sender, ToggledEventArgs e)
+    {
+        if (e.Value != _viewModel.AlwaysAvailable)
+        {
+            await _viewModel.SetAlwaysAvailableCommand.ExecuteAsync(e.Value);
+            AlwaysAvailableSwitch.IsToggled = _viewModel.AlwaysAvailable;
+        }
+    }
+
     private async void OnSaveEndpointClicked(object? sender, EventArgs e)
     {
         var text = EndpointEntry.Text?.Trim() ?? string.Empty;

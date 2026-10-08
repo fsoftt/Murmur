@@ -8,6 +8,8 @@
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageVersion Include="QRCoder" Version="1.8.0" />
     <PackageVersion Include="ZXing.Net.Maui.Controls" Version="0.10.4" />
+    <!-- 2.10.3 uses the same AndroidX Core and Lifecycle releases as MAUI 10; newer ones conflict. -->
+    <PackageVersion Include="Xamarin.AndroidX.Work.Runtime" Version="2.10.3" />
     <PackageVersion Include="Microsoft.Maui.Controls" Version="10.0.110" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="10.0.12" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.12" />

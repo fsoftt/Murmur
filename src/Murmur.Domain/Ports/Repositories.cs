@@ -50,6 +50,9 @@ public interface IMessageRepository
     /// <summary>Outgoing messages not yet acknowledged (<see cref="MessageStatus.Pending"/> or <see cref="MessageStatus.Sent"/>), in Lamport order.</summary>
     Task<IReadOnlyList<Message>> ListOutboxAsync(ConversationId conversationId, CancellationToken cancellationToken = default);
 
+    /// <summary>Number of outgoing messages not yet acknowledged, across all conversations.</summary>
+    Task<int> CountUndeliveredAsync(CancellationToken cancellationToken = default);
+
     /// <summary>Pending → Sent. Returns false if the message is not pending.</summary>
     Task<bool> MarkSentAsync(ConversationId conversationId, MessageId id, CancellationToken cancellationToken = default);
 

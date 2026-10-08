@@ -91,6 +91,13 @@ public sealed class SqliteMessageRepository(SqliteDatabase database) : IMessageR
         }, cancellationToken);
     }
 
+    public Task<int> CountUndeliveredAsync(CancellationToken cancellationToken = default) =>
+        database.ReadAsync(c =>
+        {
+            using var command = Command(c, "SELECT count(*) FROM messages WHERE direction = 0 AND status IN (0, 1)");
+            return Convert.ToInt32(command.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture);
+        }, cancellationToken);
+
     public Task<IReadOnlyList<Message>> ListOutboxAsync(ConversationId conversationId, CancellationToken cancellationToken = default) =>
         database.ReadAsync<IReadOnlyList<Message>>(c =>
         {

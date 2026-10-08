@@ -48,6 +48,13 @@ tema · tamaño y ritmo del tráfico P2P · presencia (cuándo tienes la app abi
 - Implementación propia de Noise sobre primitivas de BouncyCastle, validada contra una implementación
   independiente; prioridad nº 1 de la auditoría.
 
+## Segundo plano
+
+- Las notificaciones de mensajes nunca muestran el texto, solo "Nuevo mensaje" y el nombre que tú
+  diste al contacto, para no filtrarlo en la pantalla de bloqueo.
+- El modo "siempre disponible" mantiene una conexión al signaling: el servidor ve que tu teléfono
+  está conectado más tiempo (más metadata de presencia, mismo contenido: ninguno).
+
 ## Higiene
 
 Nunca se registran: texto de mensajes, claves, tokens, invitaciones, temas, IPs (servidor).
