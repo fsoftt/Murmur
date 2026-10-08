@@ -1,7 +1,7 @@
 # Decisiones de diseño
 
 Cada decisión importante está registrada como un ADR en
-[`docs/adr`](https://github.com/fsoftt/Directo/tree/main/docs/adr), con su contexto, las alternativas
+[`docs/adr`](https://github.com/fsoftt/Murmur/tree/main/docs/adr), con su contexto, las alternativas
 y las consecuencias. Este es el resumen.
 
 ## ADR-001 · Local-first, sin buzón en el servidor {#adr-001}

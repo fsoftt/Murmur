@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- net10.0 compiles the views and services on any OS (CI, Linux); net10.0-android is the app. -->
+    <TargetFrameworks>net10.0;net10.0-android</TargetFrameworks>
+    <OutputType Condition="'$(TargetFramework)' != 'net10.0'">Exe</OutputType>
+    <RootNamespace>Murmur.App</RootNamespace>
+    <UseMaui>true</UseMaui>
+    <SingleProject>true</SingleProject>
+
+    <ApplicationTitle>Murmur</ApplicationTitle>
+    <ApplicationId>org.murmur.app</ApplicationId>
+    <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
+    <ApplicationVersion>1</ApplicationVersion>
+
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">26.0</SupportedOSPlatformVersion>
+    <!-- No analytics, no crash-reporting SDKs (architecture §28). -->
+    <!-- MAUI tooling emits warnings outside our control; the libraries keep warnings as errors. -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <!-- The development relay transport routes encrypted traffic through the server; never in Release. -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <DefineConstants>$(DefineConstants);MURMUR_DEV_RELAY</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <MauiIcon Include="Resources\AppIcon\appicon.svg" Color="#1F6FEB" />
+    <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#1F6FEB" BaseSize="128,128" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Maui.Controls" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" />
+    <PackageReference Include="QRCoder" />
+    <PackageReference Include="ZXing.Net.Maui.Controls" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Murmur.Presentation\Murmur.Presentation.csproj" />
+  </ItemGroup>
+</Project>

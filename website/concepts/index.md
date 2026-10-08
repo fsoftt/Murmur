@@ -1,6 +1,6 @@
 # Mapa de conceptos
 
-Directo combina ideas de criptografía, redes y sistemas distribuidos. Cada página explica un
+Murmur combina ideas de criptografía, redes y sistemas distribuidos. Cada página explica un
 concepto desde cero, por qué lo usamos y **dónde está en el código**.
 
 ```mermaid

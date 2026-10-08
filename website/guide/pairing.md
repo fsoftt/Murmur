@@ -1,16 +1,16 @@
 # Emparejamiento por QR
 
-En Directo no hay directorio de usuarios: para hablar con alguien, os tenéis que **ver en persona**
+En Murmur no hay directorio de usuarios: para hablar con alguien, os tenéis que **ver en persona**
 (o por videollamada) y uno escanea el QR del otro.
 
 ## Qué contiene el QR
 
 ```text
-DIRECTO1:<base64url( { cuerpo, firma } )>
+MURMUR1:<base64url( { cuerpo, firma } )>
 
 cuerpo = { versión, tarjeta de identidad, token aleatorio (16 bytes), caducidad, nombre opcional }
 tarjeta = { clave de identidad Ed25519, clave estática X25519, firma }
-firma   = Ed25519(clave de identidad, "Directo/v1/invite" ‖ cuerpo)
+firma   = Ed25519(clave de identidad, "Murmur/v1/invite" ‖ cuerpo)
 ```
 
 Solo **claves públicas** y un token de un solo uso. Nunca claves privadas ni secretos permanentes.

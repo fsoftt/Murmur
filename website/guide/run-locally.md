@@ -8,20 +8,20 @@
 ## Pruebas
 
 ```bash
-git clone https://github.com/fsoftt/Directo.git
-cd Directo
-dotnet test Directo.slnx
+git clone https://github.com/fsoftt/Murmur.git
+cd Murmur
+dotnet test Murmur.slnx
 ```
 
-`Directo.slnx` no incluye la app MAUI, para que compile en cualquier sistema operativo.
+`Murmur.slnx` no incluye la app MAUI, para que compile en cualquier sistema operativo.
 
 ## Servidor de signaling
 
 ```bash
-dotnet run --project src/Directo.Signaling.Server --urls http://0.0.0.0:8080
+dotnet run --project src/Murmur.Signaling.Server --urls http://0.0.0.0:8080
 # o con Docker
-docker build -f src/Directo.Signaling.Server/Dockerfile -t directo-signaling .
-docker run -p 8080:8080 directo-signaling
+docker build -f src/Murmur.Signaling.Server/Dockerfile -t murmur-signaling .
+docker run -p 8080:8080 murmur-signaling
 ```
 
 En producción va detrás de un proxy TLS (las compilaciones Release exigen `wss://`). Si el proxy
@@ -31,8 +31,8 @@ límites por IP. Los límites se configuran en la sección `Signaling` de `appse
 ## App en un emulador o en dos teléfonos
 
 1. Arranca el servidor como arriba.
-2. Instala la app **Debug**: el APK `directo-debug-apk` de la CI, o
-   `dotnet build src/Directo.App -f net10.0-android -t:Run`.
+2. Instala la app **Debug**: el APK `murmur-debug-apk` de la CI, o
+   `dotnet build src/Murmur.App -f net10.0-android -t:Run`.
 3. El emulador apunta por defecto a `ws://10.0.2.2:8080/ws` (el `localhost` de tu ordenador).
    En teléfonos reales cambia la dirección en **Ajustes**.
 4. Teléfono 1: **Mostrar mi QR**. Teléfono 2: **Escanear QR**. Escribid.

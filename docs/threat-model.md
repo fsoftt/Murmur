@@ -1,4 +1,4 @@
-# Modelo de amenazas — Directo (MVP)
+# Modelo de amenazas — Murmur (MVP)
 
 > Estado: **no auditado**. No debe presentarse como "seguro" hasta completar la auditoría
 > externa (revisión criptográfica, protocolo, cliente, servidor, metadata).

@@ -17,7 +17,7 @@ Noise_KK_25519_ChaChaPoly_SHA256
       └─ patrón: qué sabe cada lado de antemano
 ```
 
-## Los patrones que usa Directo
+## Los patrones que usa Murmur
 
 | Patrón | Significado | Cuándo |
 |---|---|---|
@@ -30,7 +30,7 @@ Noise_KK_25519_ChaChaPoly_SHA256
 sequenceDiagram
     participant A as Iniciador (Ana)
     participant B as Respondedor (Beto)
-    Note over A,B: Ambos mezclan en el hash: prólogo "Directo/v1/contact", sA, sB
+    Note over A,B: Ambos mezclan en el hash: prólogo "Murmur/v1/contact", sA, sB
     A->>B: e (efímera de Ana) · es = DH(eA, sB) · ss = DH(sA, sB) · payload cifrado
     B->>A: e (efímera de Beto) · ee = DH(eA, eB) · se = DH(sA, eB) · payload cifrado
     Note over A,B: Split() → una clave para cada dirección
@@ -55,19 +55,19 @@ flowchart LR
 ## ¿Por qué no Double Ratchet?
 
 Double Ratchet (Signal) resuelve otro problema: cifrar para alguien **offline** a través de un
-buzón y descifrar mensajes que llegan desordenados días después. Directo no tiene buzón: solo entrega
+buzón y descifrar mensajes que llegan desordenados días después. Murmur no tiene buzón: solo entrega
 con los dos conectados en un canal fiable y ordenado. Un handshake nuevo por conexión da la misma
 *forward secrecy* sin estado de ratchet que guardar, sincronizar o perder ([ADR-005](/guide/decisions#adr-005)).
 
-Lo que se pierde: *post-compromise security* dentro de una misma sesión, que en Directo son cortas.
+Lo que se pierde: *post-compromise security* dentro de una misma sesión, que en Murmur son cortas.
 
 ## Prólogo y versión
 
-El **prólogo** (`Directo/v1/contact` o `Directo/v1/pairing`) se mezcla en el hash: si los dos lados
+El **prólogo** (`Murmur/v1/contact` o `Murmur/v1/pairing`) se mezcla en el hash: si los dos lados
 no hablan exactamente el mismo protocolo, el handshake falla. Los payloads del handshake anuncian el
 rango de versiones y se negocia la mayor común.
 
-**En el código:** [`HandshakeState.cs`](https://github.com/fsoftt/Directo/blob/main/src/Directo.Security/Noise/HandshakeState.cs) ·
-[`SymmetricState.cs`](https://github.com/fsoftt/Directo/blob/main/src/Directo.Security/Noise/SymmetricState.cs) ·
-[`SecureHandshake.cs`](https://github.com/fsoftt/Directo/blob/main/src/Directo.Networking/Secure/SecureHandshake.cs) ·
+**En el código:** [`HandshakeState.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Security/Noise/HandshakeState.cs) ·
+[`SymmetricState.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Security/Noise/SymmetricState.cs) ·
+[`SecureHandshake.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Networking/Secure/SecureHandshake.cs) ·
 validado con [vectores independientes](./test-vectors).

@@ -11,9 +11,9 @@ es visible.
 ```mermaid
 flowchart LR
     KS["Android Keystore<br/>(protegido por el sistema,<br/>a veces por hardware)"] --> SS[SecureStorage]
-    SS -- "clave de 256 bits" --> DB[(directo.db<br/>SQLCipher)]
+    SS -- "clave de 256 bits" --> DB[(murmur.db<br/>SQLCipher)]
     SS -- "claves privadas de identidad" --> ID[Identidad]
-    FILE[Ladrón copia directo.db] -. sin la clave .-> X[❌ ruido]
+    FILE[Ladrón copia murmur.db] -. sin la clave .-> X[❌ ruido]
 ```
 
 - La clave es **aleatoria** (no una contraseña), así que se aplica en modo "clave cruda", sin pasar
@@ -28,6 +28,6 @@ flowchart LR
 - Tablas `STRICT`, claves foráneas con borrado en cascada, `secure_delete` y `synchronous = FULL`.
 - Una única conexión serializada, con las consultas fuera del hilo de la interfaz.
 
-**En el código:** [`SqliteDatabase.cs`](https://github.com/fsoftt/Directo/blob/main/src/Directo.Storage/Database/SqliteDatabase.cs) ·
-[`Migrations.cs`](https://github.com/fsoftt/Directo/blob/main/src/Directo.Storage/Database/Migrations.cs) ·
-[`MauiSecretStore.cs`](https://github.com/fsoftt/Directo/blob/main/src/Directo.App/Services/MauiSecretStore.cs)
+**En el código:** [`SqliteDatabase.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Storage/Database/SqliteDatabase.cs) ·
+[`Migrations.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Storage/Database/Migrations.cs) ·
+[`MauiSecretStore.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.App/Services/MauiSecretStore.cs)

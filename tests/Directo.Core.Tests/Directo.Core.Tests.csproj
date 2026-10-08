@@ -1,6 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\Directo.Domain\Directo.Domain.csproj" />
-    <ProjectReference Include="..\..\src\Directo.Storage\Directo.Storage.csproj" />
-  </ItemGroup>
-</Project>

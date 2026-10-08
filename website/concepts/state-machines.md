@@ -41,5 +41,5 @@ el servidor de signaling cae, la conexión directa sigue viva.
 Los mensajes tienen su propia máquina (`Pending → Sent → Delivered`) y la base de datos solo permite
 las transiciones válidas (por ejemplo, un ACK no puede "des-entregar" un mensaje).
 
-**En el código:** [`PeerConnectionStateMachine.cs`](https://github.com/fsoftt/Directo/blob/main/src/Directo.Domain/Connections/PeerConnectionStateMachine.cs) ·
-[`ContactConnection.cs`](https://github.com/fsoftt/Directo/blob/main/src/Directo.Networking/Sessions/ContactConnection.cs)
+**En el código:** [`PeerConnectionStateMachine.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Domain/Connections/PeerConnectionStateMachine.cs) ·
+[`ContactConnection.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Networking/Sessions/ContactConnection.cs)

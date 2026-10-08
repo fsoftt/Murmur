@@ -64,7 +64,7 @@ todos a la vez. Lo mismo vale para reconectar al servidor o a un contacto.
 - Un ACK solo marca como entregados mensajes **salientes** de **esa** conversación.
 - Un mensaje entrante con el id de uno propio se ignora.
 
-**En el código:** [`SendMessage.cs`](https://github.com/fsoftt/Directo/blob/main/src/Directo.Domain/UseCases/SendMessage.cs) ·
-[`ConversationSyncSession.cs`](https://github.com/fsoftt/Directo/blob/main/src/Directo.Domain/Delivery/ConversationSyncSession.cs) ·
-[`SqliteMessageRepository.cs`](https://github.com/fsoftt/Directo/blob/main/src/Directo.Storage/Repositories/SqliteMessageRepository.cs) ·
-[`Backoff.cs`](https://github.com/fsoftt/Directo/blob/main/src/Directo.Domain/Common/Backoff.cs)
+**En el código:** [`SendMessage.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Domain/UseCases/SendMessage.cs) ·
+[`ConversationSyncSession.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Domain/Delivery/ConversationSyncSession.cs) ·
+[`SqliteMessageRepository.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Storage/Repositories/SqliteMessageRepository.cs) ·
+[`Backoff.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Domain/Common/Backoff.cs)

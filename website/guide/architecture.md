@@ -1,22 +1,22 @@
 # Arquitectura
 
-Directo sigue **Clean Architecture** con **MVVM** en la presentación: las dependencias apuntan hacia
+Murmur sigue **Clean Architecture** con **MVVM** en la presentación: las dependencias apuntan hacia
 el dominio y el dominio no conoce SQLite, Noise, WebSockets ni MAUI.
 
 ## Proyectos y dependencias
 
 ```mermaid
 flowchart TB
-    App["Directo.App<br/><i>Vistas XAML, servicios MAUI</i>"] --> Presentation
-    Presentation["Directo.Presentation<br/><i>ViewModels MVVM, textos para el usuario</i>"] --> Client
-    Client["Directo.Client<br/><i>Raíz de composición: DirectoClient</i>"] --> Networking & Storage
-    Networking["Directo.Networking<br/><i>Signaling, enlaces P2P, sesión Noise,<br/>conexiones, emparejamiento</i>"] --> Domain & Security
-    Storage["Directo.Storage<br/><i>SQLCipher, migraciones, repositorios</i>"] --> Domain
-    Security["Directo.Security<br/><i>Noise, identidad, invitaciones,<br/>código de seguridad, temas</i>"] --> Protocol
+    App["Murmur.App<br/><i>Vistas XAML, servicios MAUI</i>"] --> Presentation
+    Presentation["Murmur.Presentation<br/><i>ViewModels MVVM, textos para el usuario</i>"] --> Client
+    Client["Murmur.Client<br/><i>Raíz de composición: MurmurClient</i>"] --> Networking & Storage
+    Networking["Murmur.Networking<br/><i>Signaling, enlaces P2P, sesión Noise,<br/>conexiones, emparejamiento</i>"] --> Domain & Security
+    Storage["Murmur.Storage<br/><i>SQLCipher, migraciones, repositorios</i>"] --> Domain
+    Security["Murmur.Security<br/><i>Noise, identidad, invitaciones,<br/>código de seguridad, temas</i>"] --> Protocol
     Networking --> Protocol
-    Protocol["Directo.Protocol<br/><i>CBOR, JSON de signaling, límites</i>"]
-    Domain["Directo.Domain<br/><i>Entidades, casos de uso, outbox/ACK,<br/>máquina de estados, puertos</i>"]
-    Server["Directo.Signaling.Server<br/><i>ASP.NET Core + WebSockets</i>"] --> Protocol
+    Protocol["Murmur.Protocol<br/><i>CBOR, JSON de signaling, límites</i>"]
+    Domain["Murmur.Domain<br/><i>Entidades, casos de uso, outbox/ACK,<br/>máquina de estados, puertos</i>"]
+    Server["Murmur.Signaling.Server<br/><i>ASP.NET Core + WebSockets</i>"] --> Protocol
 
     classDef core fill:#1f6feb22,stroke:#1f6feb
     class Domain core
@@ -24,15 +24,15 @@ flowchart TB
 
 | Proyecto | Responsabilidad | Depende de |
 |---|---|---|
-| `Directo.Domain` | Modelo (`Contact`, `Conversation`, `Message`), reglas, casos de uso (`SendMessage`, `ManageContacts`), motor de entrega (`ConversationSyncSession`), máquina de estados, puertos (`IMessageRepository`, `IPeerChannel`, `ISecretStore`) | nada |
-| `Directo.Protocol` | Formatos de cable: frames CBOR, tarjetas de identidad, invitaciones, mensajes de signaling, límites | `System.Formats.Cbor` |
-| `Directo.Security` | Noise KK/IK, claves locales, invitaciones firmadas, código de seguridad, derivación de temas | Protocol, BouncyCastle |
-| `Directo.Storage` | `SqliteDatabase` (SQLCipher), migraciones, repositorios | Domain |
-| `Directo.Networking` | `SignalingClient`, `IPeerLink` y sus implementaciones, `SecureSession`, `PeerConnectionManager`, `PairingService` | Domain, Protocol, Security |
-| `Directo.Client` | `DirectoClient`: ensambla identidad, base de datos, red y casos de uso | Networking, Storage |
-| `Directo.Presentation` | ViewModels testeables en cualquier SO | Client |
-| `Directo.App` | Vistas, `SecureStorage`, navegación Shell, QR | Presentation |
-| `Directo.Signaling.Server` | Presencia y relay sobre WebSocket | Protocol |
+| `Murmur.Domain` | Modelo (`Contact`, `Conversation`, `Message`), reglas, casos de uso (`SendMessage`, `ManageContacts`), motor de entrega (`ConversationSyncSession`), máquina de estados, puertos (`IMessageRepository`, `IPeerChannel`, `ISecretStore`) | nada |
+| `Murmur.Protocol` | Formatos de cable: frames CBOR, tarjetas de identidad, invitaciones, mensajes de signaling, límites | `System.Formats.Cbor` |
+| `Murmur.Security` | Noise KK/IK, claves locales, invitaciones firmadas, código de seguridad, derivación de temas | Protocol, BouncyCastle |
+| `Murmur.Storage` | `SqliteDatabase` (SQLCipher), migraciones, repositorios | Domain |
+| `Murmur.Networking` | `SignalingClient`, `IPeerLink` y sus implementaciones, `SecureSession`, `PeerConnectionManager`, `PairingService` | Domain, Protocol, Security |
+| `Murmur.Client` | `MurmurClient`: ensambla identidad, base de datos, red y casos de uso | Networking, Storage |
+| `Murmur.Presentation` | ViewModels testeables en cualquier SO | Client |
+| `Murmur.App` | Vistas, `SecureStorage`, navegación Shell, QR | Presentation |
+| `Murmur.Signaling.Server` | Presencia y relay sobre WebSocket | Protocol |
 
 ## Los puertos del dominio
 
@@ -77,7 +77,7 @@ sin red, sin criptografía y sin emulador.
 flowchart LR
     subgraph Teléfono
       UI[Vistas MAUI] --> VM[ViewModels]
-      VM --> DC[DirectoClient]
+      VM --> DC[MurmurClient]
       DC --> PCM[PeerConnectionManager]
       PCM --> CC1["ContactConnection<br/>(una por contacto)"]
       CC1 --> SS[SecureSession<br/>Noise]

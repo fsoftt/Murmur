@@ -1,20 +1,20 @@
 import { defineConfig } from 'vitepress'
 
-const repo = 'https://github.com/fsoftt/Directo'
+const repo = 'https://github.com/fsoftt/Murmur'
 
 export default defineConfig({
   lang: 'es',
-  title: 'Directo',
+  title: 'Murmur',
   description: 'Mensajería privada local-first, cifrada de extremo a extremo y peer-to-peer, construida con .NET 10 y .NET MAUI: qué es, cómo funciona y cómo se construyó.',
-  base: '/Directo/',
+  base: '/Murmur/',
   cleanUrls: true,
   ignoreDeadLinks: 'localhostLinks',
   lastUpdated: true,
   // Mermaid is large but loaded lazily, only on pages that contain diagrams.
   vite: { build: { chunkSizeWarningLimit: 3000 } },
   head: [
-    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/Directo/favicon.svg' }],
-    ['meta', { property: 'og:title', content: 'Directo: mensajería privada peer-to-peer' }],
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/Murmur/favicon.svg' }],
+    ['meta', { property: 'og:title', content: 'Murmur: mensajería privada peer-to-peer' }],
     ['meta', { property: 'og:description', content: 'Sin cuentas ni servidores que guarden mensajes. Noise, SQLCipher, QR y .NET MAUI.' }],
   ],
 
@@ -44,7 +44,7 @@ export default defineConfig({
       {
         text: 'El proyecto',
         items: [
-          { text: 'Qué es Directo', link: '/guide/overview' },
+          { text: 'Qué es Murmur', link: '/guide/overview' },
           { text: 'Arquitectura', link: '/guide/architecture' },
           { text: 'La vida de un mensaje', link: '/guide/life-of-a-message' },
           { text: 'Emparejamiento por QR', link: '/guide/pairing' },
@@ -99,7 +99,7 @@ export default defineConfig({
     darkModeSwitchLabel: 'Apariencia',
     footer: {
       message: 'Código bajo AGPL-3.0 · Documentación bajo CC BY 4.0',
-      copyright: 'Directo: mensajería privada, local-first y peer-to-peer',
+      copyright: 'Murmur: mensajería privada, local-first y peer-to-peer',
     },
   },
 })

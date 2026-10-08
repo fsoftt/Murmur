@@ -11,7 +11,7 @@ deshacerlo la otra.
 | | Ed25519 | X25519 |
 |---|---|---|
 | Para qué | **Firmar**: demostrar que algo viene de ti y que nadie lo cambió | **Acordar un secreto** con otra persona (Diffie-Hellman) |
-| En Directo | Firma de la tarjeta de identidad y de la invitación QR | Handshakes Noise y derivación de temas de encuentro |
+| En Murmur | Firma de la tarjeta de identidad y de la invitación QR | Handshakes Noise y derivación de temas de encuentro |
 | Tamaño | Clave de 32 bytes, firma de 64 | Clave de 32 bytes |
 
 ### Firmar
@@ -52,7 +52,7 @@ nunca viaja por la red.
 
 ```text
 tarjeta = { clave de identidad (Ed25519), clave estática (X25519),
-            firma = Ed25519(identidad, "Directo/v1/identity-card" ‖ identidad ‖ estática) }
+            firma = Ed25519(identidad, "Murmur/v1/identity-card" ‖ identidad ‖ estática) }
 ```
 
 La firma ata la estática a la identidad: nadie puede presentar tu identidad con otra estática.
@@ -61,9 +61,9 @@ Separar ambas claves permite, en el futuro, una estática por dispositivo bajo l
 
 ## Una regla importante
 
-**Nunca implementar primitivas criptográficas.** Directo usa las de BouncyCastle y .NET a través de
+**Nunca implementar primitivas criptográficas.** Murmur usa las de BouncyCastle y .NET a través de
 envoltorios mínimos que también rechazan claves de orden bajo (un resultado X25519 todo ceros).
 
-**En el código:** [`Curve25519.cs`](https://github.com/fsoftt/Directo/blob/main/src/Directo.Security/Primitives/Curve25519.cs) ·
-[`LocalIdentityKeys.cs`](https://github.com/fsoftt/Directo/blob/main/src/Directo.Security/Identity/LocalIdentityKeys.cs) ·
-[`IdentityCard.cs`](https://github.com/fsoftt/Directo/blob/main/src/Directo.Protocol/Identity/IdentityCard.cs)
+**En el código:** [`Curve25519.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Security/Primitives/Curve25519.cs) ·
+[`LocalIdentityKeys.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Security/Identity/LocalIdentityKeys.cs) ·
+[`IdentityCard.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Protocol/Identity/IdentityCard.cs)

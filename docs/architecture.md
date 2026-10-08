@@ -1,4 +1,4 @@
-# Arquitectura — Directo
+# Arquitectura — Murmur
 
 > Mensajería privada **local-first**, **cifrada de extremo a extremo** y **peer-to-peer**.
 > Este documento es la versión revisada de la arquitectura inicial. Las decisiones concretas y
@@ -42,26 +42,26 @@ SQLite      = si no estás, espero    (outbox local cifrado con SQLCipher)
 ## 3. Componentes y capas
 
 ```
-┌──────────────────────────── Directo.App (MAUI, Android) ───────────────────────────┐
-│  Views (XAML)  ──►  Directo.Presentation (ViewModels MVVM, textos para el usuario)  │
+┌──────────────────────────── Murmur.App (MAUI, Android) ───────────────────────────┐
+│  Views (XAML)  ──►  Murmur.Presentation (ViewModels MVVM, textos para el usuario)  │
 └──────────────────────────────────────┬──────────────────────────────────────────────┘
                                        ▼
-                     Directo.Client (raíz de composición: DirectoClient)
+                     Murmur.Client (raíz de composición: MurmurClient)
               ┌────────────────────────┼─────────────────────────────┐
               ▼                        ▼                             ▼
-     Directo.Domain            Directo.Networking               Directo.Storage
+     Murmur.Domain            Murmur.Networking               Murmur.Storage
   entidades, casos de uso,   signaling, IPeerLink, sesión      SQLCipher, migraciones,
   outbox/ACK, máquina de     Noise, gestor de conexiones,      repositorios
   estados, puertos           emparejamiento
               ▲                        │
               │                        ▼
-              │               Directo.Security ──► Directo.Protocol
+              │               Murmur.Security ──► Murmur.Protocol
               │          Noise KK/IK, identidad,      CBOR (frames, invitaciones),
               │          invitaciones, safety number  JSON de signaling, límites
               │
    (el dominio no depende de nada; todo apunta hacia él)
 
-Directo.Signaling.Server (ASP.NET Core) ──► Directo.Protocol
+Murmur.Signaling.Server (ASP.NET Core) ──► Murmur.Protocol
 ```
 
 - **Domain** no conoce SQLite, Noise ni WebRTC: habla con `IPeerChannel`, repositorios y `ISecretStore`.
@@ -109,7 +109,7 @@ Ambos pueden comparar después el **código de seguridad** (60 dígitos, algorit
 ## 6. Encontrarse sin revelar el grafo social
 
 - Cada pareja deriva un **tema de encuentro** de su secreto X25519 compartido:
-  `HKDF(DH(sA, sB), salt="Directo/v1/rendezvous/contact", info=día UTC)` ([ADR-007](adr/ADR-007-rotating-rendezvous.md)).
+  `HKDF(DH(sA, sB), salt="Murmur/v1/rendezvous/contact", info=día UTC)` ([ADR-007](adr/ADR-007-rotating-rendezvous.md)).
 - El tema **rota cada día**; cerca de medianoche se suscriben dos días para tolerar desfase de reloj.
 - El servidor ve "dos conexiones en el mismo tema aleatorio", nunca identidades ni nombres, y
   no puede enlazar la misma pareja de un día a otro solo por el tema.

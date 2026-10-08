@@ -8,7 +8,7 @@ Hasta tener el transporte WebRTC (fase 4) la app no podría emparejar ni chatear
 ## Decisión
 - `DevRelayPeerLinkFactory` tuneliza el enlace (ya cifrado de extremo a extremo con Noise) por el
   relay del servidor de signaling, fragmentando en bloques de 12 KiB.
-- Solo se registra en compilaciones **Debug** (`DIRECTO_DEV_RELAY`). Las compilaciones Release
+- Solo se registra en compilaciones **Debug** (`MURMUR_DEV_RELAY`). Las compilaciones Release
   usan `UnavailablePeerLinkFactory`: nunca conectan y los mensajes quedan pendientes.
 
 ## Consecuencias

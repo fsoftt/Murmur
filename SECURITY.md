@@ -1,6 +1,6 @@
 # Política de seguridad
 
-Directo está en **pre-alfa y no ha sido auditado**.
+Murmur está en **pre-alfa y no ha sido auditado**.
 
 ## Informar de una vulnerabilidad
 
@@ -9,7 +9,7 @@ Advisories) de este repositorio. Incluye pasos para reproducir y el impacto que 
 
 Prioridades de revisión, en orden:
 
-1. Implementación de Noise (`src/Directo.Security/Noise`).
+1. Implementación de Noise (`src/Murmur.Security/Noise`).
 2. Emparejamiento y verificación de invitaciones.
 3. Parsers de red (CBOR, JSON de signaling) y límites.
 4. Almacenamiento local (SQLCipher, gestión de claves).

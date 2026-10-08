@@ -11,10 +11,10 @@ flowchart TB
 
 | Proyecto | Qué cubre |
 |---|---|
-| `Directo.Protocol.Tests` | Ida y vuelta de cada formato, campos desconocidos, claves duplicadas, bytes sobrantes, límites, 20 000 entradas de fuzzing, validación de temas |
-| `Directo.Security.Tests` | **Vectores Noise KK e IK** de una implementación independiente, prólogos, manipulación, replay, turnos, puntos de orden bajo, invitaciones (caducidad, firma ajena, cualquier bit cambiado), código de seguridad, temas |
-| `Directo.Core.Tests` | Base cifrada (sin texto plano en disco, clave incorrecta), repositorios, Lamport, idempotencia, máquina de estados, backoff, y entrega entre dos dispositivos con fallos inyectados |
-| `Directo.IntegrationTests` | Servidor de signaling (límites, presencia, relay, reconexión), escenarios completos, transporte de desarrollo y ViewModels |
+| `Murmur.Protocol.Tests` | Ida y vuelta de cada formato, campos desconocidos, claves duplicadas, bytes sobrantes, límites, 20 000 entradas de fuzzing, validación de temas |
+| `Murmur.Security.Tests` | **Vectores Noise KK e IK** de una implementación independiente, prólogos, manipulación, replay, turnos, puntos de orden bajo, invitaciones (caducidad, firma ajena, cualquier bit cambiado), código de seguridad, temas |
+| `Murmur.Core.Tests` | Base cifrada (sin texto plano en disco, clave incorrecta), repositorios, Lamport, idempotencia, máquina de estados, backoff, y entrega entre dos dispositivos con fallos inyectados |
+| `Murmur.IntegrationTests` | Servidor de signaling (límites, presencia, relay, reconexión), escenarios completos, transporte de desarrollo y ViewModels |
 
 ## Escenarios de extremo a extremo
 

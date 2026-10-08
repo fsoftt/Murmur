@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Murmur.Networking\Murmur.Networking.csproj" />
+    <ProjectReference Include="..\Murmur.Storage\Murmur.Storage.csproj" />
+  </ItemGroup>
+</Project>

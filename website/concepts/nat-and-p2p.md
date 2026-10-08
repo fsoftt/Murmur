@@ -39,7 +39,7 @@ sequenceDiagram
     Note over A,B: Ruta directa encontrada → DataChannel abierto<br/>Encima: Noise_KK
 ```
 
-## Las decisiones de Directo
+## Las decisiones de Murmur
 
 - **Sin TURN** en el MVP ([ADR-002](/guide/decisions#adr-002)): no queremos un servidor que retransmita
   el tráfico. Algunas redes no tendrán ruta directa y los mensajes seguirán pendientes. Hay que
@@ -51,6 +51,6 @@ sequenceDiagram
   ([ADR-003](/guide/decisions#adr-003)).
 - **Tu contacto ve tu IP pública**: es inherente a una conexión directa.
 
-**En el código:** [`IPeerLink.cs`](https://github.com/fsoftt/Directo/blob/main/src/Directo.Networking/Links/IPeerLink.cs) ·
-[`InMemoryPeerLinkNetwork.cs`](https://github.com/fsoftt/Directo/blob/main/src/Directo.Networking/Links/InMemoryPeerLinkNetwork.cs) ·
-[`DevRelayPeerLinkFactory.cs`](https://github.com/fsoftt/Directo/blob/main/src/Directo.Networking/Links/DevRelayPeerLinkFactory.cs)
+**En el código:** [`IPeerLink.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Networking/Links/IPeerLink.cs) ·
+[`InMemoryPeerLinkNetwork.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Networking/Links/InMemoryPeerLinkNetwork.cs) ·
+[`DevRelayPeerLinkFactory.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Networking/Links/DevRelayPeerLinkFactory.cs)

@@ -2,8 +2,8 @@
 
 El **formato de cable** (*wire format*) es cómo se convierten los datos en bytes para viajar por la
 red, y cómo se reconstruyen al otro lado. Si dos programas no coinciden exactamente en él, no se
-entienden. Por eso Directo tiene una
-[especificación pública](https://github.com/fsoftt/Directo/blob/main/docs/protocol/spec.md), independiente del código: con ella se podría
+entienden. Por eso Murmur tiene una
+[especificación pública](https://github.com/fsoftt/Murmur/blob/main/docs/protocol/spec.md), independiente del código: con ella se podría
 escribir otro cliente compatible, en Kotlin o Swift.
 
 ## Dos formatos, dos usos
@@ -46,10 +46,10 @@ CBOR es "JSON binario". En lugar de nombres de campo usamos **números pequeños
 ## Versiones
 
 Las tarjetas y las invitaciones llevan su propia versión, el handshake negocia la del protocolo y
-el prefijo del QR (`DIRECTO1:`) identifica el formato. Un cambio incompatible exige una versión
+el prefijo del QR (`MURMUR1:`) identifica el formato. Un cambio incompatible exige una versión
 nueva y un prólogo nuevo.
 
-**En el código:** [`PeerFrameCodec.cs`](https://github.com/fsoftt/Directo/blob/main/src/Directo.Protocol/Frames/PeerFrameCodec.cs) ·
-[`CborMap.cs`](https://github.com/fsoftt/Directo/blob/main/src/Directo.Protocol/Serialization/CborMap.cs) ·
-[`SignalingMessages.cs`](https://github.com/fsoftt/Directo/blob/main/src/Directo.Protocol/Signaling/SignalingMessages.cs) ·
-[`ProtocolConstants.cs`](https://github.com/fsoftt/Directo/blob/main/src/Directo.Protocol/ProtocolConstants.cs)
+**En el código:** [`PeerFrameCodec.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Protocol/Frames/PeerFrameCodec.cs) ·
+[`CborMap.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Protocol/Serialization/CborMap.cs) ·
+[`SignalingMessages.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Protocol/Signaling/SignalingMessages.cs) ·
+[`ProtocolConstants.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Protocol/ProtocolConstants.cs)

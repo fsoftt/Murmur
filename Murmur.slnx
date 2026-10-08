@@ -1,0 +1,18 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Murmur.Client/Murmur.Client.csproj" />
+    <Project Path="src/Murmur.Domain/Murmur.Domain.csproj" />
+    <Project Path="src/Murmur.Networking/Murmur.Networking.csproj" />
+    <Project Path="src/Murmur.Presentation/Murmur.Presentation.csproj" />
+    <Project Path="src/Murmur.Protocol/Murmur.Protocol.csproj" />
+    <Project Path="src/Murmur.Security/Murmur.Security.csproj" />
+    <Project Path="src/Murmur.Signaling.Server/Murmur.Signaling.Server.csproj" />
+    <Project Path="src/Murmur.Storage/Murmur.Storage.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Murmur.Core.Tests/Murmur.Core.Tests.csproj" />
+    <Project Path="tests/Murmur.IntegrationTests/Murmur.IntegrationTests.csproj" />
+    <Project Path="tests/Murmur.Protocol.Tests/Murmur.Protocol.Tests.csproj" />
+    <Project Path="tests/Murmur.Security.Tests/Murmur.Security.Tests.csproj" />
+  </Folder>
+</Solution>
