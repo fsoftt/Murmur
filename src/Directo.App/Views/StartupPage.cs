@@ -13,7 +13,7 @@ public sealed class StartupPage : ContentPage
             Children =
             {
                 new ActivityIndicator { IsRunning = true },
-                new Label { Text = message, HorizontalTextAlignment = TextAlignment.Center },
+                new Label { Text = message, HorizontalTextAlignment = TextAlignment.Center, Style = Application.Current?.Resources["Muted"] as Style },
             },
         };
     }

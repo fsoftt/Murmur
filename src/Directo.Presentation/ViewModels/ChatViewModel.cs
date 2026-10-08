@@ -28,8 +28,28 @@ public sealed partial class ChatViewModel(DirectoClient client, IUiDispatcher di
     public partial bool IsVerified { get; set; }
 
     [ObservableProperty]
+    public partial string Initials { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string AvatarColor { get; set; } = "#2563EB";
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsOnline), nameof(IsConnecting))]
+    public partial PresenceKind Presence { get; set; }
+
+    public bool IsOnline => Presence == PresenceKind.Online;
+
+    public bool IsConnecting => Presence == PresenceKind.Connecting;
+
+    /// <summary>Messages in one run must be this close in time to share a bubble group.</summary>
+    public static readonly TimeSpan GroupWindow = TimeSpan.FromMinutes(5);
+
+    [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SendCommand))]
+    [NotifyPropertyChangedFor(nameof(HasDraft))]
     public partial string Draft { get; set; } = string.Empty;
+
+    public bool HasDraft => CanSend();
 
     public async Task LoadAsync(ContactId contactId)
     {
@@ -42,7 +62,11 @@ public sealed partial class ChatViewModel(DirectoClient client, IUiDispatcher di
             _conversationId = conversation.Id;
             Title = contact.DisplayName;
             IsVerified = contact.Verification == VerificationState.Verified;
-            ConnectionStatus = UserMessages.ForConnection(client.GetConnectionState(contactId));
+            Initials = Avatars.Initials(contact.DisplayName);
+            AvatarColor = Avatars.ColorFor(contact.Identity.IdentityKey);
+            var state = client.GetConnectionState(contactId);
+            ConnectionStatus = UserMessages.ForConnection(state);
+            Presence = UserMessages.ForPresence(state);
             Subscribe();
             var history = await client.LoadMessagesAsync(conversation.Id);
             Messages.Clear();
@@ -50,6 +74,8 @@ public sealed partial class ChatViewModel(DirectoClient client, IUiDispatcher di
             {
                 Messages.Add(new MessageItemViewModel(message));
             }
+
+            Regroup();
         });
     }
 
@@ -89,6 +115,22 @@ public sealed partial class ChatViewModel(DirectoClient client, IUiDispatcher di
 
     private bool CanSend() => !string.IsNullOrWhiteSpace(Draft);
 
+    /// <summary>Recomputes bubble runs: same side, each message within <see cref="GroupWindow"/> of the previous one.</summary>
+    private void Regroup()
+    {
+        for (var i = 0; i < Messages.Count; i++)
+        {
+            var current = Messages[i];
+            var previous = i > 0 ? Messages[i - 1] : null;
+            var next = i < Messages.Count - 1 ? Messages[i + 1] : null;
+            current.IsFirstInGroup = previous is null || !SameRun(previous, current);
+            current.IsLastInGroup = next is null || !SameRun(current, next);
+        }
+    }
+
+    private static bool SameRun(MessageItemViewModel earlier, MessageItemViewModel later) =>
+        earlier.IsOutgoing == later.IsOutgoing && later.DisplayedAt - earlier.DisplayedAt < GroupWindow;
+
     private void Subscribe()
     {
         if (_subscribed)
@@ -125,6 +167,7 @@ public sealed partial class ChatViewModel(DirectoClient client, IUiDispatcher di
             }
 
             Messages.Insert(index, item);
+            Regroup();
         });
     }
 
@@ -149,7 +192,11 @@ public sealed partial class ChatViewModel(DirectoClient client, IUiDispatcher di
     {
         if (change.ContactId == _contactId)
         {
-            dispatcher.Post(() => ConnectionStatus = UserMessages.ForConnection(change.State));
+            dispatcher.Post(() =>
+            {
+                ConnectionStatus = UserMessages.ForConnection(change.State);
+                Presence = UserMessages.ForPresence(change.State);
+            });
         }
     }
 }

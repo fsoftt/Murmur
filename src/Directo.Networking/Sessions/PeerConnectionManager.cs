@@ -106,7 +106,7 @@ public sealed class PeerConnectionManager : IAsyncDisposable
                         }
 
                         connection = new ContactConnection(
-                            contact, _keys, _conversations, _sync, _signaling, _links, _events, _time, _options,
+                            contact, _keys, _contacts, _conversations, _sync, _signaling, _links, _events, _time, _options,
                             _loggerFactory.CreateLogger<ContactConnection>());
                         _connections[contact.Id] = connection;
                         started.Add(connection);

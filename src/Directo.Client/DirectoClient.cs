@@ -23,6 +23,7 @@ namespace Directo.Client;
 public sealed class DirectoClient : IAsyncDisposable
 {
     private const string ProfileNameSetting = "profile.name";
+    private const string OnboardedSetting = "onboarding.done";
 
     private readonly LocalIdentityKeys _keys;
     private readonly SqliteDatabase _database;
@@ -153,6 +154,13 @@ public sealed class DirectoClient : IAsyncDisposable
 
     public Task SetProfileNameAsync(string? name, CancellationToken cancellationToken = default) =>
         _settings.SetAsync(ProfileNameSetting, InviteService.NormalizeProfileName(name), cancellationToken);
+
+    /// <summary>Whether the user already went through the first-run explanation.</summary>
+    public async Task<bool> IsOnboardedAsync(CancellationToken cancellationToken = default) =>
+        await _settings.GetAsync(OnboardedSetting, cancellationToken).ConfigureAwait(false) is not null;
+
+    public Task MarkOnboardedAsync(CancellationToken cancellationToken = default) =>
+        _settings.SetAsync(OnboardedSetting, "1", cancellationToken);
 
     public async Task<CreatedInvite> CreateInviteAsync(CancellationToken cancellationToken = default) =>
         await Pairing.CreateInviteAsync(await GetProfileNameAsync(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);

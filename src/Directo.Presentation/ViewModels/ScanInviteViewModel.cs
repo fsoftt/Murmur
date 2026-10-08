@@ -27,7 +27,7 @@ public sealed partial class ScanInviteViewModel(DirectoClient client, INavigator
             {
                 var contact = await client.AcceptInviteAsync(inviteText);
                 Status = $"Emparejado con {contact.DisplayName}.";
-                await navigator.OpenChatAsync(contact.Id);
+                await navigator.OpenPairedAsync(contact.Id);
             });
             if (ErrorMessage is not null)
             {

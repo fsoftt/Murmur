@@ -140,6 +140,29 @@ public sealed class DeliveryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Messages_are_refused_once_the_contact_is_no_longer_accepted()
+    {
+        var accepting = true;
+        var (a, b) = FakePeerChannel.CreatePair();
+        using var cts = new CancellationTokenSource();
+        var bobSession = new ConversationSyncSession(_bob.Store.Messages, _bob.Store.Outbox, _bob.Store.Events, TimeProvider.System, FastRetransmission)
+            .RunAsync(_bob.Conversation, b, cts.Token, _ => Task.FromResult(accepting));
+        var aliceSession = _alice.Run(a, cts.Token);
+
+        var first = await _alice.SendAsync("antes del bloqueo");
+        await _alice.WaitDeliveredAsync(first.Id);
+        accepting = false;
+        await _alice.SendAsync("después del bloqueo");
+
+        var ex = await Assert.ThrowsAsync<DirectoException>(() => bobSession.WaitAsync(TimeSpan.FromSeconds(5)));
+        Assert.Equal(DirectoErrorCode.ContactBlocked, ex.Code);
+        Assert.Equal(["antes del bloqueo"], (await _bob.HistoryAsync()).Select(m => m.Body));
+        a.Close();
+        await cts.CancelAsync();
+        await aliceSession.WaitAsync(TimeSpan.FromSeconds(5));
+    }
+
+    [Fact]
     public async Task Session_ends_when_the_channel_closes()
     {
         var link = Connect();

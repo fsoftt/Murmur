@@ -38,6 +38,8 @@ public partial class ChatPage : ContentPage, IQueryAttributable
         }
     }
 
+    private async void OnBackTapped(object? sender, TappedEventArgs e) => await Shell.Current.GoToAsync("..");
+
     private async void OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         if (e.CurrentSelection.FirstOrDefault() is not MessageItemViewModel message)

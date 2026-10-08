@@ -19,6 +19,7 @@ namespace Directo.Networking.Sessions;
 internal sealed partial class ContactConnection : IAsyncDisposable
 {
     private readonly LocalIdentityKeys _keys;
+    private readonly IContactRepository _contacts;
     private readonly IConversationRepository _conversations;
     private readonly ConversationSyncSession _sync;
     private readonly ISignalingChannel _signaling;
@@ -36,6 +37,7 @@ internal sealed partial class ContactConnection : IAsyncDisposable
     public ContactConnection(
         Contact contact,
         LocalIdentityKeys keys,
+        IContactRepository contacts,
         IConversationRepository conversations,
         ConversationSyncSession sync,
         ISignalingChannel signaling,
@@ -47,6 +49,7 @@ internal sealed partial class ContactConnection : IAsyncDisposable
     {
         Contact = contact;
         _keys = keys;
+        _contacts = contacts;
         _conversations = conversations;
         _sync = sync;
         _signaling = signaling;
@@ -143,10 +146,18 @@ internal sealed partial class ContactConnection : IAsyncDisposable
                 .EstablishContactSessionAsync(link, _isInitiator, _keys, Contact.Identity.StaticKey, establish.Token)
                 .ConfigureAwait(false);
 
+            // The contact may have been blocked or deleted after this connection started (the
+            // manager reacts asynchronously). Never exchange messages with it in that window.
+            if (!await IsStillAllowedAsync(cancellationToken).ConfigureAwait(false))
+            {
+                LogSessionRefused(_logger);
+                throw new DirectoException(DirectoErrorCode.ContactBlocked, "Contact blocked or removed.");
+            }
+
             established = true;
             Machine.Fire(PeerConnectionTrigger.Established);
             LogSessionEstablished(_logger, session.ProtocolVersion);
-            await _sync.RunAsync(conversation, session, cancellationToken).ConfigureAwait(false);
+            await _sync.RunAsync(conversation, session, cancellationToken, IsStillAllowedAsync).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -162,6 +173,10 @@ internal sealed partial class ContactConnection : IAsyncDisposable
         return established;
     }
 
+    private async Task<bool> IsStillAllowedAsync(CancellationToken cancellationToken) =>
+        await _contacts.GetAsync(Contact.Id, cancellationToken).ConfigureAwait(false) is { IsBlocked: false } current
+        && current.Identity.Equals(Contact.Identity);
+
     private async Task WaitForRetryAsync(TimeSpan delay, CancellationToken cancellationToken)
     {
         await Task.Delay(delay, _time, cancellationToken).ConfigureAwait(false);
@@ -173,6 +188,9 @@ internal sealed partial class ContactConnection : IAsyncDisposable
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Secure session established (protocol v{Version})")]
     private static partial void LogSessionEstablished(ILogger logger, int version);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Secure session refused: contact blocked or removed")]
+    private static partial void LogSessionRefused(ILogger logger);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Peer session ended (established: {Established}, reason: {Reason})")]
     private static partial void LogSessionFailed(ILogger logger, bool established, string reason);

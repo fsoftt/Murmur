@@ -28,7 +28,9 @@ public partial class App : Application
         try
         {
             await _host.InitializeAsync();
-            window.Page = _services.GetRequiredService<AppShell>();
+            window.Page = await _host.Client.IsOnboardedAsync()
+                ? _services.GetRequiredService<AppShell>()
+                : _services.GetRequiredService<OnboardingPage>();
         }
         catch (Exception)
         {

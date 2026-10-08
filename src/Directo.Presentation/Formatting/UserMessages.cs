@@ -8,8 +8,49 @@ namespace Directo.Presentation.Formatting;
 /// User-facing wording (architecture §38 and §57): plain language, honest about where a message
 /// is, never technical jargon such as "ICE candidate gathering failed".
 /// </summary>
+/// <summary>Coarse presence for colored indicators.</summary>
+public enum PresenceKind
+{
+    Offline,
+    Connecting,
+    Online,
+}
+
 public static class UserMessages
 {
+    public static PresenceKind ForPresence(PeerConnectionState state) => state switch
+    {
+        PeerConnectionState.Connected => PresenceKind.Online,
+        PeerConnectionState.Negotiating => PresenceKind.Connecting,
+        _ => PresenceKind.Offline,
+    };
+
+    /// <summary>Short relative time for lists: "18:42", "Ayer", weekday, or date.</summary>
+    public static string ForActivity(DateTimeOffset? at, DateTimeOffset now)
+    {
+        if (at is null)
+        {
+            return string.Empty;
+        }
+
+        var local = at.Value.ToLocalTime();
+        var today = now.ToLocalTime().Date;
+        var culture = System.Globalization.CultureInfo.CurrentCulture;
+        if (local.Date == today)
+        {
+            return local.ToString("HH:mm", culture);
+        }
+
+        if (local.Date == today.AddDays(-1))
+        {
+            return "Ayer";
+        }
+
+        return local.Date > today.AddDays(-7)
+            ? culture.TextInfo.ToTitleCase(local.ToString("ddd", culture).TrimEnd('.'))
+            : local.ToString("d MMM", culture);
+    }
+
     public static string ForError(DirectoErrorCode code) => code switch
     {
         DirectoErrorCode.InvalidMessage => "El mensaje está vacío.",

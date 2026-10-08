@@ -36,12 +36,20 @@ public sealed class ConversationSyncSession(
     private readonly DeliveryOptions _options = options ?? DeliveryOptions.Default;
 
     /// <summary>Runs until the channel closes or <paramref name="cancellationToken"/> fires.</summary>
-    public async Task RunAsync(Conversation conversation, IPeerChannel channel, CancellationToken cancellationToken)
+    /// <param name="acceptIncoming">
+    /// Checked before storing each incoming message; returning false ends the session without
+    /// storing or acknowledging (e.g. the contact was blocked while the session was open).
+    /// </param>
+    public async Task RunAsync(
+        Conversation conversation,
+        IPeerChannel channel,
+        CancellationToken cancellationToken,
+        Func<CancellationToken, Task<bool>>? acceptIncoming = null)
     {
         ArgumentNullException.ThrowIfNull(conversation);
         ArgumentNullException.ThrowIfNull(channel);
         using var session = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        var receive = ReceiveLoopAsync(conversation.Id, channel, session.Token);
+        var receive = ReceiveLoopAsync(conversation.Id, channel, acceptIncoming, session.Token);
         var send = SendLoopAsync(conversation.Id, channel, session.Token);
 
         var first = await Task.WhenAny(receive, send).ConfigureAwait(false);
@@ -62,7 +70,11 @@ public sealed class ConversationSyncSession(
         }
     }
 
-    private async Task ReceiveLoopAsync(ConversationId conversationId, IPeerChannel channel, CancellationToken cancellationToken)
+    private async Task ReceiveLoopAsync(
+        ConversationId conversationId,
+        IPeerChannel channel,
+        Func<CancellationToken, Task<bool>>? acceptIncoming,
+        CancellationToken cancellationToken)
     {
         var incoming = new TokenBucket(_options.IncomingMessagesPerSecond, _options.IncomingBurst, time);
         await foreach (var peerEvent in channel.ReadEventsAsync(cancellationToken).ConfigureAwait(false))
@@ -72,6 +84,11 @@ public sealed class ConversationSyncSession(
                 case PeerMessageReceived received:
                     // Bounds how fast a misbehaving contact can fill local storage.
                     await incoming.WaitAsync(cancellationToken).ConfigureAwait(false);
+                    if (acceptIncoming is not null && !await acceptIncoming(cancellationToken).ConfigureAwait(false))
+                    {
+                        throw new DirectoException(DirectoErrorCode.ContactBlocked, "Incoming messages are no longer accepted from this contact.");
+                    }
+
                     await StoreIncomingAsync(conversationId, received, cancellationToken).ConfigureAwait(false);
 
                     // ACK only after the message is durably stored, and also for duplicates:

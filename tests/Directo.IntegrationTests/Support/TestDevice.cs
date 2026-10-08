@@ -27,11 +27,14 @@ public sealed class TestDevice : IAsyncDisposable
     private TestDevice(string profileName, SignalingServerFixture server, IPeerLinkFactory network)
     {
         _profileName = profileName;
+        Logs = new ListLoggerProvider(profileName);
         _server = server;
         _network = network;
     }
 
     public DirectoClient Client { get; private set; } = null!;
+
+    public ListLoggerProvider Logs { get; private set; } = null!;
 
     public bool IsRunning { get; private set; }
 
@@ -55,7 +58,8 @@ public sealed class TestDevice : IAsyncDisposable
                 Connections = FastConnections,
             },
             _secrets,
-            _network);
+            _network,
+            loggerFactory: Logs);
         await Client.StartAsync();
         IsRunning = true;
     }

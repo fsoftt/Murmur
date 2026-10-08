@@ -9,6 +9,9 @@ public interface INavigator
 
     Task OpenContactDetailsAsync(ContactId contactId);
 
+    /// <summary>The celebration screen shown right after a successful pairing.</summary>
+    Task OpenPairedAsync(ContactId contactId);
+
     Task OpenInviteAsync();
 
     Task OpenScannerAsync();

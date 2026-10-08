@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Directo.Client;
 using Directo.Domain.Model;
+using Directo.Presentation.Formatting;
 using Directo.Presentation.Services;
 
 namespace Directo.Presentation.ViewModels;
@@ -24,6 +25,20 @@ public sealed partial class ContactDetailsViewModel(DirectoClient client, INavig
     [ObservableProperty]
     public partial bool IsBlocked { get; set; }
 
+    [ObservableProperty]
+    public partial string Initials { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string AvatarColor { get; set; } = "#2563EB";
+
+    /// <summary>The safety number as twelve 5-digit groups, for a grid layout.</summary>
+    [ObservableProperty]
+    public partial IReadOnlyList<string> SafetyGroups { get; set; } = [];
+
+    /// <summary>8×8 mirrored visual fingerprint (palette index or -1), identical on both phones.</summary>
+    [ObservableProperty]
+    public partial IReadOnlyList<int> FingerprintCells { get; set; } = [];
+
     public Task LoadAsync(ContactId contactId)
     {
         _contactId = contactId;
@@ -34,7 +49,11 @@ public sealed partial class ContactDetailsViewModel(DirectoClient client, INavig
             DisplayName = contact.DisplayName;
             IsVerified = contact.Verification == VerificationState.Verified;
             IsBlocked = contact.IsBlocked;
+            Initials = Avatars.Initials(contact.DisplayName);
+            AvatarColor = Avatars.ColorFor(contact.Identity.IdentityKey);
             SafetyNumber = await client.GetSafetyNumberAsync(contactId);
+            SafetyGroups = Fingerprint.Groups(SafetyNumber);
+            FingerprintCells = Fingerprint.Cells(SafetyNumber);
         });
     }
 
