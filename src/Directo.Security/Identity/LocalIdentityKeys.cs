@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using Directo.Protocol.Identity;
+using Directo.Security.Noise;
 using Directo.Security.Primitives;
 
 namespace Directo.Security.Identity;
@@ -56,8 +57,9 @@ public sealed class LocalIdentityKeys : IDisposable
     /// <summary>X25519 with the static key; used to derive per-contact rendezvous topics.</summary>
     public byte[] StaticAgreement(ReadOnlySpan<byte> remoteStaticPublic) => Curve25519.X25519Agreement(_staticPrivate, remoteStaticPublic);
 
-    /// <summary>Copy of the static private key for a Noise handshake (which wipes it when disposed).</summary>
-    internal byte[] CopyStaticPrivate() => (byte[])_staticPrivate.Clone();
+    /// <summary>Starts a Noise handshake with the static key, without exposing it to callers.</summary>
+    public HandshakeState CreateHandshake(HandshakePattern pattern, bool initiator, ReadOnlySpan<byte> prologue, ReadOnlySpan<byte> remoteStaticKey = default) =>
+        new(pattern, initiator, prologue, _staticPrivate, remoteStaticKey);
 
     public void Dispose()
     {
