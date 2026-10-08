@@ -1,21 +1,25 @@
 <p align="center">
-  <img src="website/public/favicon.svg" width="72" alt="Logo de Murmur">
+  <img src="website/public/favicon.svg" width="72" alt="Murmur logo">
 </p>
 
 <h1 align="center">Murmur</h1>
 
 <p align="center">
-  <b>Mensajería privada, local-first, cifrada de extremo a extremo y peer-to-peer.</b><br>
-  Sin cuentas, sin teléfono, sin email. Sin servidores que guarden tus conversaciones.
+  <b>Private messaging that is local-first, end-to-end encrypted and peer-to-peer.</b><br>
+  No accounts, no phone number, no email. No server that stores your conversations.
 </p>
 
 <p align="center">
-  <a href="https://fsoftt.github.io/Murmur/"><b>📖 Sitio del proyecto</b></a> ·
-  <a href="docs/architecture.md">Arquitectura</a> ·
-  <a href="docs/protocol/spec.md">Protocolo</a> ·
-  <a href="docs/threat-model.md">Modelo de amenazas</a> ·
-  <a href="docs/adr/README.md">Decisiones</a> ·
-  <a href="CONTRIBUTING.md">Contribuir</a>
+  <a href="https://fsoftt.github.io/Murmur/"><b>📖 Project site</b></a> ·
+  <a href="docs/architecture.md">Architecture</a> ·
+  <a href="docs/protocol/spec.md">Protocol</a> ·
+  <a href="docs/threat-model.md">Threat model</a> ·
+  <a href="docs/adr/README.md">Decisions</a> ·
+  <a href="CONTRIBUTING.md">Contributing</a>
+</p>
+
+<p align="center">
+  🇬🇧 English · <a href="README.es.md">🇪🇸 Español</a>
 </p>
 
 <p align="center">
@@ -23,280 +27,304 @@
   <a href="https://fsoftt.github.io/Murmur/"><img alt="Docs" src="https://img.shields.io/badge/docs-fsoftt.github.io%2FMurmur-1f6feb"></a>
   <img alt=".NET 10" src="https://img.shields.io/badge/.NET-10-512BD4">
   <img alt=".NET MAUI" src="https://img.shields.io/badge/app-.NET%20MAUI%20Android-3DDC84">
-  <a href="LICENSE"><img alt="Licencia AGPL-3.0" src="https://img.shields.io/badge/licencia-AGPL--3.0-blue"></a>
+  <a href="LICENSE"><img alt="License AGPL-3.0" src="https://img.shields.io/badge/license-AGPL--3.0-blue"></a>
 </p>
 
 > [!WARNING]
-> **Pre-alfa y sin auditar.** No uses Murmur para comunicaciones sensibles hasta que exista una
-> auditoría de seguridad independiente. Consulta el [modelo de amenazas](docs/threat-model.md).
+> **Pre-alpha and not audited.** Do not use Murmur for sensitive communication until an
+> independent security audit exists. See the [threat model](docs/threat-model.md).
 
 ---
 
-## Contenido
+## Contents
 
-- [Qué es](#qué-es)
-- [Cómo funciona, en una imagen](#cómo-funciona-en-una-imagen)
-- [Las reglas del juego](#las-reglas-del-juego)
-- [La vida de un mensaje](#la-vida-de-un-mensaje)
-- [Emparejamiento por QR](#emparejamiento-por-qr)
-- [Arquitectura](#arquitectura)
-- [Técnicas y dónde están en el código](#técnicas-y-dónde-están-en-el-código)
-- [Seguridad y privacidad](#seguridad-y-privacidad)
-- [Pruebas y CI](#pruebas-y-ci)
-- [Ejecutarlo](#ejecutarlo)
-- [Estructura del repositorio](#estructura-del-repositorio)
-- [Estado y hoja de ruta](#estado-y-hoja-de-ruta)
-- [Licencia](#licencia)
+- [What it is](#what-it-is)
+- [How it works, in one picture](#how-it-works-in-one-picture)
+- [The rules of the game](#the-rules-of-the-game)
+- [The life of a message](#the-life-of-a-message)
+- [Delivering without opening the app](#delivering-without-opening-the-app)
+- [Pairing with a QR code](#pairing-with-a-qr-code)
+- [Architecture](#architecture)
+- [Techniques and where they live in the code](#techniques-and-where-they-live-in-the-code)
+- [Security and privacy](#security-and-privacy)
+- [Tests and CI](#tests-and-ci)
+- [Running it](#running-it)
+- [Repository layout](#repository-layout)
+- [Status and roadmap](#status-and-roadmap)
+- [License](#license)
+
+> The documents under `docs/` (architecture, ADRs, protocol, threat model) are written in Spanish.
+> The [project site](https://fsoftt.github.io/Murmur/) is available in English and Spanish.
 
 ---
 
-## Qué es
+## What it is
 
-Murmur es una aplicación de mensajería con tres propiedades que normalmente no van juntas:
+Murmur is a messaging app with three properties that rarely come together:
 
-1. **Local-first.** Tus conversaciones viven en tus dispositivos, en una base de datos cifrada. No hay copia en ningún servidor.
-2. **Cifrado de extremo a extremo.** Solo los dos teléfonos de la conversación pueden leer los mensajes.
-3. **Peer-to-peer.** Los mensajes viajan directamente de teléfono a teléfono; el servidor solo ayuda a que se encuentren.
+1. **Local-first.** Your conversations live on your devices, in an encrypted database. No server keeps a copy.
+2. **End-to-end encrypted.** Only the two phones in a conversation can read its messages.
+3. **Peer-to-peer.** Messages travel straight from phone to phone; the server only helps them find each other.
 
-> **Principio rector:** si una funcionalidad puede hacerse de forma segura en el dispositivo,
-> necesita una buena razón para ir al servidor.
+> **Guiding principle:** if something can be done safely on the device, it needs a good reason to
+> move to a server.
 
-| Mensajería habitual | Murmur |
+| Typical messengers | Murmur |
 |---|---|
-| Te registras con tu número o email | Tu identidad es un par de claves generado en tu teléfono |
-| El servidor guarda los mensajes hasta que los recibes | No hay buzón: el mensaje espera **en tu teléfono** |
-| El servidor sabe quién es contacto de quién | Los contactos solo existen en los dos teléfonos |
-| Añades contactos por su número | Os emparejáis **en persona** escaneando un QR |
+| You sign up with a phone number or email | Your identity is a key pair generated on your phone |
+| The server stores messages until you fetch them | There is no mailbox: the message waits **on the sender's phone** |
+| The server knows who talks to whom | Contacts exist only on the two phones |
+| You add contacts by number | You pair **in person** by scanning a QR code |
 
-## Cómo funciona, en una imagen
+## How it works, in one picture
 
 ```mermaid
 flowchart LR
-    A["📱 Ana<br/>SQLCipher + Keystore"] <== "Noise_KK cifrado<br/>peer-to-peer" ==> B["📱 Beto<br/>SQLCipher + Keystore"]
-    A -. "tema aleatorio del día" .-> S[("Servidor de signaling<br/>sin base de datos")]
-    B -. "tema aleatorio del día" .-> S
+    A["📱 Ana<br/>SQLCipher + Keystore"] <== "Noise_KK encrypted<br/>peer-to-peer" ==> B["📱 Ben<br/>SQLCipher + Keystore"]
+    A -. "random topic of the day" .-> S[("Signaling server<br/>no database")]
+    B -. "random topic of the day" .-> S
 ```
 
-- Cada teléfono genera su **identidad** (claves Ed25519 y X25519) y la guarda en el **Android Keystore**.
-- Dos personas se **emparejan escaneando un QR** firmado, de un solo uso.
-- Cada pareja deriva un **tema de encuentro** que solo ella puede calcular y que cambia cada día. El
-  servidor de signaling solo ve "dos conexiones en un tema aleatorio".
-- Cuando ambos están online, abren una conexión directa y un **handshake Noise** nuevo, con *forward secrecy*.
-- Los mensajes se guardan primero en un **outbox local** (SQLCipher) y se marcan como entregados solo
-  cuando el otro confirma que los **guardó**.
+- Each phone creates its **identity** (Ed25519 and X25519 keys) and keeps the private keys in the **Android Keystore**.
+- Two people **pair by scanning a signed, single-use QR code**.
+- Each pair derives a **rendezvous topic** that only the two of them can compute and that changes
+  every day. The signaling server only sees "two connections on a random topic".
+- When both phones are reachable they open a direct connection and a fresh **Noise handshake**, with
+  *forward secrecy*.
+- Messages are first saved to a **local outbox** (SQLCipher) and marked delivered only once the other
+  side confirms it **stored** them.
 
-## Las reglas del juego
+## The rules of the game
 
-Decisiones de producto explícitas, no letra pequeña:
+Explicit product decisions, not fine print:
 
-| Regla | Consecuencia |
+| Rule | Consequence |
 |---|---|
-| Solo se entrega si **ambos estáis online a la vez** | Si escribes y cierras la app antes de que el otro se conecte, el mensaje espera en tu teléfono (🕒). |
-| Conexión directa | **Tu contacto ve tu IP pública** mientras habláis. |
-| Sin TURN en el MVP | En algunas redes (CGNAT estricto, redes corporativas) no habrá ruta directa y los mensajes seguirán pendientes. |
-| Sin recuperación | Perder el teléfono es perder identidad, contactos e historial. |
-| "Borrar" es borrar en tu teléfono | Nadie puede garantizar el borrado en el teléfono del otro. |
+| A message is delivered only when **both phones are reachable at the same time** | If the other person is not reachable, the message waits on your phone (🕒). No server holds it. |
+| [Background delivery](#delivering-without-opening-the-app) | Your phone keeps trying every 15 minutes even with the app closed. With **Always available** on, it can also receive while closed. |
+| Direct connection | **Your contacts see your public IP address** while you talk. |
+| No TURN in the MVP | On some networks (strict carrier NAT, corporate networks) there is no direct path and messages stay pending. |
+| No recovery | Losing the phone means losing the identity, contacts and history. |
+| "Delete" deletes on your phone | Nobody can guarantee deletion on the other person's phone. |
 
-## La vida de un mensaje
+## The life of a message
 
 ```mermaid
 sequenceDiagram
     actor Ana
     participant DA as SQLCipher (Ana)
     participant S as Signaling
-    participant B as Teléfono de Beto
-    Ana->>DA: "Hola" → INSERT (Pending, lamport+1)
-    Note over Ana: 🕒 pendiente en este dispositivo
-    DA-->>S: sub [tema del día]
-    B-->>S: sub [mismo tema]
+    participant B as Ben's phone
+    Ana->>DA: "Hi" → INSERT (Pending, lamport+1)
+    Note over Ana: 🕒 pending on this device
+    DA-->>S: sub [topic of the day]
+    B-->>S: sub [same topic]
     S-->>DA: presence = 1
-    DA->>B: enlace P2P + Noise_KK (2 mensajes)
-    DA->>B: ChatMessage cifrado
-    Note over Ana: ↑ transmitido, esperando confirmación
-    B->>B: INSERT si no existe (idempotente)
-    B->>DA: Ack (solo después de guardar)
-    Note over Ana: ✓ entregado
+    DA->>B: P2P link + Noise_KK (2 messages)
+    DA->>B: encrypted ChatMessage
+    Note over Ana: ↑ sent, waiting for confirmation
+    B->>B: INSERT if absent (idempotent)
+    B->>DA: Ack (only after storing)
+    Note over Ana: ✓ delivered
 ```
 
-| Si… | Entonces… |
+| If… | then… |
 |---|---|
-| se pierde el ACK | se reenvía con backoff exponencial y jitter; el receptor no lo duplica y vuelve a confirmar |
-| se corta la red | la sesión termina, se reconecta con backoff y se reenvía lo no confirmado |
-| se cierra la app | el mensaje sigue en la base y se reenvía al volver |
-| llegan miles de mensajes | el receptor aplica contrapresión: 20/s tras una ráfaga de 200 |
-| alguien altera un byte | ChaCha20-Poly1305 lo detecta y la sesión se cierra |
-| los relojes difieren | el orden lo dan los relojes de Lamport, no la hora |
+| the ACK is lost | the message is resent with exponential backoff and jitter; the receiver does not duplicate it and confirms again |
+| the network drops | the session ends, reconnects with backoff, and anything unconfirmed is resent |
+| the app is closed | the message stays in the database; a background job keeps trying |
+| thousands of messages arrive | the receiver applies backpressure: 20/s after a burst of 200 |
+| someone tampers with a byte | ChaCha20-Poly1305 detects it and the session is closed |
+| the clocks disagree | Lamport clocks decide the order, not the time of day |
+| the contact is blocked mid-session | nothing more is stored or acknowledged |
 
-## Emparejamiento por QR
+## Delivering without opening the app
+
+Mobile operating systems suspend apps in the background, so Murmur offers two Android mechanisms
+([ADR-012](docs/adr/ADR-012-background-delivery.md)). Neither stores anything on a server.
+
+| Mechanism | What it does | Cost |
+|---|---|---|
+| **Background delivery** (always on) | A WorkManager job runs every 15 minutes with a network, and once when you leave the app. It starts the client and tries to deliver everything pending for a few minutes. | None visible. |
+| **Always available** (opt-in) | A foreground service keeps the phone connected to the signaling service with the app closed, so contacts can reach it. It comes back after a reboot. | A permanent notification and some battery. Murmur warns you if battery optimization may pause it. |
+
+With background delivery on the sender and *Always available* on the receiver, delivery no longer
+depends on both people opening the app at the same time. Notifications for new messages show only
+the contact's name, **never the text**. iOS will need a content-free push instead (separate decision).
+
+## Pairing with a QR code
 
 ```mermaid
 sequenceDiagram
-    participant TB as Beto (muestra QR)
+    participant TB as Ben (shows QR)
     participant S as Signaling
-    participant TA as Ana (escanea)
-    TB->>TB: invitación = tarjeta + token de un solo uso + caducidad, firmada
+    participant TA as Ana (scans)
+    TB->>TB: invite = card + single-use token + expiry, signed
     TB->>S: sub [HKDF(token)]
-    TA->>TA: verifica firma y caducidad sin red
+    TA->>TA: verifies signature and expiry offline
     TA->>S: sub [HKDF(token)]
-    TA->>TB: Noise_IK msg 1: tarjeta de Ana + token (cifrados)
-    TB->>TB: token válido · tarjeta firmada · estática probada por el handshake
-    TB->>TB: guarda a Ana
+    TA->>TB: Noise_IK msg 1: Ana's card + token (encrypted)
+    TB->>TB: valid token · signed card · static key proven by the handshake
+    TB->>TB: stores Ana
     TB->>TA: Noise_IK msg 2
-    TA->>TA: guarda a Beto
-    Note over TA,TB: Contacto "sin verificar" hasta comparar el código de seguridad (60 dígitos)
+    TA->>TA: stores Ben
+    Note over TA,TB: Contact "unverified" until the safety number is compared (60 digits)
 ```
 
-El QR solo contiene **claves públicas** y un token aleatorio que caduca a los 10 minutos.
+The QR code contains only **public keys** and a random token that expires after 10 minutes.
 
-## Arquitectura
+## Architecture
 
-**Clean Architecture** con **MVVM**: las dependencias apuntan hacia el dominio, y el dominio no
-conoce SQLite, Noise, WebSockets ni MAUI.
+**Clean Architecture** with **MVVM**: dependencies point towards the domain, and the domain knows
+nothing about SQLite, Noise, WebSockets or MAUI.
 
 ```mermaid
 flowchart TB
-    App["Murmur.App<br/>Vistas MAUI"] --> Presentation["Murmur.Presentation<br/>ViewModels"]
-    Presentation --> Client["Murmur.Client<br/>raíz de composición"]
-    Client --> Networking["Murmur.Networking<br/>signaling · P2P · Noise · emparejamiento"]
-    Client --> Storage["Murmur.Storage<br/>SQLCipher · migraciones"]
-    Networking --> Domain["Murmur.Domain<br/>entidades · casos de uso · outbox · estados"]
+    App["Murmur.App<br/>MAUI views, Android background"] --> Presentation["Murmur.Presentation<br/>ViewModels"]
+    Presentation --> Client["Murmur.Client<br/>composition root"]
+    Client --> Networking["Murmur.Networking<br/>signaling · P2P · Noise · pairing"]
+    Client --> Storage["Murmur.Storage<br/>SQLCipher · migrations"]
+    Networking --> Domain["Murmur.Domain<br/>entities · use cases · outbox · state"]
     Storage --> Domain
-    Networking --> Security["Murmur.Security<br/>Noise · identidad · invitaciones"]
-    Security --> Protocol["Murmur.Protocol<br/>CBOR · JSON · límites"]
+    Networking --> Security["Murmur.Security<br/>Noise · identity · invites"]
+    Security --> Protocol["Murmur.Protocol<br/>CBOR · JSON · limits"]
     Networking --> Protocol
     Server["Murmur.Signaling.Server<br/>ASP.NET Core"] --> Protocol
 ```
 
-El transporte entre teléfonos es intercambiable (`IPeerLink`: fiable, ordenado, por mensajes). La
-confidencialidad la pone Noise por encima, así que ningún transporte necesita ser de confianza:
+The transport between phones is pluggable (`IPeerLink`: reliable, ordered, message based). Noise
+provides confidentiality on top, so no transport has to be trusted:
 
-| Transporte | Uso |
+| Transport | Use |
 |---|---|
-| WebRTC DataChannel (binding de `stream-webrtc-android`) | Producción, fase 4 |
-| `InMemoryPeerLinkNetwork` | Tests: simula NAT inalcanzable y caídas |
-| `DevRelayPeerLinkFactory` | Solo compilaciones Debug: canal cifrado por el relay del servidor |
-| `UnavailablePeerLinkFactory` | Release hasta la fase 4 |
+| WebRTC DataChannel (binding of `stream-webrtc-android`) | Production, phase 4 |
+| `InMemoryPeerLinkNetwork` | Tests: simulates unreachable NATs and dropped links |
+| `DevRelayPeerLinkFactory` | Debug builds only: the encrypted channel through the server's relay |
+| `UnavailablePeerLinkFactory` | Release builds until phase 4 |
 
-Más detalle en [`docs/architecture.md`](docs/architecture.md) y en el
-[sitio](https://fsoftt.github.io/Murmur/guide/architecture).
+More in [`docs/architecture.md`](docs/architecture.md) and on the
+[site](https://fsoftt.github.io/Murmur/guide/architecture).
 
-## Técnicas y dónde están en el código
+## Techniques and where they live in the code
 
-| Técnica | Para qué | Dónde |
+| Technique | Why | Where |
 |---|---|---|
-| **Noise_KK / Noise_IK** (25519, ChaChaPoly, SHA-256) | Autenticación mutua y claves nuevas por conexión (*forward secrecy*) | [`Security/Noise`](src/Murmur.Security/Noise) · [`SecureHandshake.cs`](src/Murmur.Networking/Secure/SecureHandshake.cs) |
-| **Vectores de prueba independientes** | Nuestro Noise produce los mismos bytes que `noiseprotocol` (Python) | [`NoiseVectorTests.cs`](tests/Murmur.Security.Tests/NoiseVectorTests.cs) |
-| **Ed25519 / X25519** | Firmar tarjetas e invitaciones; acordar secretos | [`Curve25519.cs`](src/Murmur.Security/Primitives/Curve25519.cs) · [`LocalIdentityKeys.cs`](src/Murmur.Security/Identity/LocalIdentityKeys.cs) |
-| **ChaCha20-Poly1305** con nonces de contador | Cifrado autenticado; detecta manipulación, replay y reordenamiento | [`ChaChaPoly.cs`](src/Murmur.Security/Primitives/ChaChaPoly.cs) · [`CipherState.cs`](src/Murmur.Security/Noise/CipherState.cs) |
-| **HKDF** y temas de encuentro rotativos | Presencia sin revelar identidades | [`Rendezvous.cs`](src/Murmur.Security/Identity/Rendezvous.cs) |
-| **Invitaciones firmadas de un solo uso** | Emparejamiento por QR sin secretos en el código | [`InviteService.cs`](src/Murmur.Security/Identity/InviteService.cs) · [`PairingService.cs`](src/Murmur.Networking/Pairing/PairingService.cs) |
-| **Código de seguridad** (estilo Signal) | Detectar a un impostor | [`SafetyNumber.cs`](src/Murmur.Security/Identity/SafetyNumber.cs) |
-| **CBOR estricto** con límites previos | Formato de cable compacto, evolutivo y resistente a entradas hostiles | [`Protocol/Frames`](src/Murmur.Protocol/Frames) · [`CborMap.cs`](src/Murmur.Protocol/Serialization/CborMap.cs) |
-| **Outbox transaccional** | Ningún mensaje se pierde aunque la app muera | [`SendMessage.cs`](src/Murmur.Domain/UseCases/SendMessage.cs) |
-| **ACK tras persistir + recepción idempotente** | Ni pérdidas ni duplicados | [`ConversationSyncSession.cs`](src/Murmur.Domain/Delivery/ConversationSyncSession.cs) · [`SqliteMessageRepository.cs`](src/Murmur.Storage/Repositories/SqliteMessageRepository.cs) |
-| **Backoff exponencial con jitter** | Reintentos sin saturar | [`Backoff.cs`](src/Murmur.Domain/Common/Backoff.cs) |
-| **Relojes de Lamport** | Mismo orden en ambos teléfonos, inmune al desfase de relojes | [`MessageRules.cs`](src/Murmur.Domain/Model/MessageRules.cs) |
-| **Máquina de estados explícita** | Ciclo de vida de la conexión sin estados imposibles | [`PeerConnectionStateMachine.cs`](src/Murmur.Domain/Connections/PeerConnectionStateMachine.cs) |
-| **Token bucket y contrapresión** | Frenar a un emisor rápido sin perder mensajes | [`TokenBucket.cs`](src/Murmur.Domain/Common/TokenBucket.cs) |
-| **SQLCipher + Keystore** | Base cifrada; la clave nunca está junto al fichero | [`SqliteDatabase.cs`](src/Murmur.Storage/Database/SqliteDatabase.cs) · [`MauiSecretStore.cs`](src/Murmur.App/Services/MauiSecretStore.cs) |
-| **Migraciones versionadas** | Evolucionar el esquema sin perder datos | [`Migrations.cs`](src/Murmur.Storage/Database/Migrations.cs) |
-| **Límites anti-abuso** en el servidor | Temas, miembros, conexiones por IP, ritmo, colas acotadas | [`SignalingSession.cs`](src/Murmur.Signaling.Server/SignalingSession.cs) |
-| **Clean Architecture + MVVM** | Dominio sin dependencias; ViewModels testeables en cualquier SO | [`Murmur.Domain`](src/Murmur.Domain) · [`Murmur.Presentation`](src/Murmur.Presentation) |
+| **Noise_KK / Noise_IK** (25519, ChaChaPoly, SHA-256) | Mutual authentication and fresh keys per connection (*forward secrecy*) | [`Security/Noise`](src/Murmur.Security/Noise) · [`SecureHandshake.cs`](src/Murmur.Networking/Secure/SecureHandshake.cs) |
+| **Independent test vectors** | Our Noise produces the same bytes as `noiseprotocol` (Python) | [`NoiseVectorTests.cs`](tests/Murmur.Security.Tests/NoiseVectorTests.cs) |
+| **Ed25519 / X25519** | Signing cards and invites; agreeing on secrets | [`Curve25519.cs`](src/Murmur.Security/Primitives/Curve25519.cs) · [`LocalIdentityKeys.cs`](src/Murmur.Security/Identity/LocalIdentityKeys.cs) |
+| **ChaCha20-Poly1305** with counter nonces | Authenticated encryption; detects tampering, replay and reordering | [`ChaChaPoly.cs`](src/Murmur.Security/Primitives/ChaChaPoly.cs) · [`CipherState.cs`](src/Murmur.Security/Noise/CipherState.cs) |
+| **HKDF** and rotating rendezvous topics | Presence without revealing identities | [`Rendezvous.cs`](src/Murmur.Security/Identity/Rendezvous.cs) |
+| **Signed single-use invites** | QR pairing with no secrets in the code | [`InviteService.cs`](src/Murmur.Security/Identity/InviteService.cs) · [`PairingService.cs`](src/Murmur.Networking/Pairing/PairingService.cs) |
+| **Safety number** (Signal style) and visual fingerprint | Detecting an impostor | [`SafetyNumber.cs`](src/Murmur.Security/Identity/SafetyNumber.cs) · [`Fingerprint.cs`](src/Murmur.Presentation/Formatting/Fingerprint.cs) |
+| **Strict CBOR** with limits checked first | Compact, evolvable wire format that resists hostile input | [`Protocol/Frames`](src/Murmur.Protocol/Frames) · [`CborMap.cs`](src/Murmur.Protocol/Serialization/CborMap.cs) |
+| **Transactional outbox** | No message is lost even if the app dies | [`SendMessage.cs`](src/Murmur.Domain/UseCases/SendMessage.cs) |
+| **ACK after persisting + idempotent receive** | Neither losses nor duplicates | [`ConversationSyncSession.cs`](src/Murmur.Domain/Delivery/ConversationSyncSession.cs) · [`SqliteMessageRepository.cs`](src/Murmur.Storage/Repositories/SqliteMessageRepository.cs) |
+| **Exponential backoff with jitter** | Retrying without overloading | [`Backoff.cs`](src/Murmur.Domain/Common/Backoff.cs) |
+| **Lamport clocks** | Same order on both phones, immune to clock skew | [`MessageRules.cs`](src/Murmur.Domain/Model/MessageRules.cs) |
+| **Explicit state machine** | Connection lifecycle without impossible states | [`PeerConnectionStateMachine.cs`](src/Murmur.Domain/Connections/PeerConnectionStateMachine.cs) |
+| **Token bucket and backpressure** | Slowing a fast sender down without losing messages | [`TokenBucket.cs`](src/Murmur.Domain/Common/TokenBucket.cs) |
+| **SQLCipher + Keystore** | Encrypted database; the key never sits next to the file | [`SqliteDatabase.cs`](src/Murmur.Storage/Database/SqliteDatabase.cs) · [`MauiSecretStore.cs`](src/Murmur.App/Services/MauiSecretStore.cs) |
+| **Versioned migrations** | Evolving the schema without losing data | [`Migrations.cs`](src/Murmur.Storage/Database/Migrations.cs) |
+| **WorkManager + foreground service** | Delivering and staying reachable with the app closed | [`OutboxWorker.cs`](src/Murmur.App/Platforms/Android/Background/OutboxWorker.cs) · [`AvailabilityForegroundService.cs`](src/Murmur.App/Platforms/Android/Background/AvailabilityForegroundService.cs) |
+| **Abuse limits** on the server | Topics, members, connections per IP, rate, bounded queues | [`SignalingSession.cs`](src/Murmur.Signaling.Server/SignalingSession.cs) |
+| **Clean Architecture + MVVM** | A dependency-free domain; view models testable on any OS | [`Murmur.Domain`](src/Murmur.Domain) · [`Murmur.Presentation`](src/Murmur.Presentation) |
 
-Cada técnica tiene una página explicativa en [el sitio](https://fsoftt.github.io/Murmur/concepts/).
+Every technique has its own explanation page on [the site](https://fsoftt.github.io/Murmur/concepts/).
 
-## Seguridad y privacidad
+## Security and privacy
 
-| | Contenido | Contactos | Quién habla con quién | Tu IP |
+| | Content | Contacts | Who talks to whom | Your IP |
 |---|---|---|---|---|
-| **Servidor de signaling** | ❌ | ❌ | Solo "dos conexiones comparten un tema aleatorio hoy" | ✅ |
-| **Red o Wi-Fi hostil** | ❌ | ❌ | Tráfico entre dos IPs | ✅ |
-| **Tu contacto** | ✅ | — | — | ✅ |
-| **Ladrón con el teléfono bloqueado** | ❌ | ❌ | ❌ | — |
-| **Malware en tu teléfono desbloqueado** | ✅ | ✅ | ✅ | ✅ |
+| **Signaling server** | ❌ | ❌ | Only "two connections share a random topic today" | ✅ |
+| **Hostile network or Wi-Fi** | ❌ | ❌ | Traffic between two IPs | ✅ |
+| **Your contact** | ✅ | — | — | ✅ |
+| **Thief with your locked phone** | ❌ | ❌ | ❌ | — |
+| **Malware on your unlocked phone** | ✅ | ✅ | ✅ | ✅ |
 
-- **Nunca** se registran mensajes, claves, tokens, invitaciones, temas ni IPs.
-- Sin SDKs de analítica, publicidad ni crash reporting. Copias de seguridad de Android desactivadas.
-- Un test graba **todo** el tráfico del servidor y comprueba que no contiene contenido, nombres ni claves de identidad.
-- Vulnerabilidades: ver [`SECURITY.md`](SECURITY.md).
+- Messages, keys, tokens, invites, topics and IP addresses are **never** logged.
+- No analytics, advertising or crash-reporting SDKs. Android backups are disabled.
+- A test records **all** of the server's traffic and checks that it contains no content, names or identity keys.
+- Report vulnerabilities as described in [`SECURITY.md`](SECURITY.md).
 
-## Pruebas y CI
+## Tests and CI
 
-121 tests automatizados:
+137 automated tests:
 
-| Proyecto | Cubre |
+| Project | Covers |
 |---|---|
-| `Murmur.Protocol.Tests` | Formatos de cable, compatibilidad hacia delante, límites, **fuzzing** (20 000 entradas) |
-| `Murmur.Security.Tests` | **Vectores Noise independientes**, manipulación, replay, invitaciones, código de seguridad, temas |
-| `Murmur.Core.Tests` | SQLCipher real (sin texto plano en disco), repositorios, Lamport, máquina de estados, entrega con fallos inyectados |
-| `Murmur.IntegrationTests` | **Servidor real en proceso + dos dispositivos completos**: emparejamiento, offline, emisor offline, caídas de red, peer inalcanzable, bloqueo, reinicios, el servidor no ve contenido, ViewModels |
+| `Murmur.Protocol.Tests` | Wire formats, forward compatibility, limits, **fuzzing** (20,000 inputs) |
+| `Murmur.Security.Tests` | **Independent Noise vectors**, tampering, replay, invites, safety number, topics |
+| `Murmur.Core.Tests` | Real SQLCipher (no plaintext on disk), repositories, Lamport, state machine, delivery with injected faults, blocking mid-session |
+| `Murmur.IntegrationTests` | **Real server in process + two complete devices**: pairing, offline, sender offline, background delivery with the app closed, network drops, unreachable peer, blocking, restarts, the server sees no content, view models |
 
-La CI de GitHub Actions ejecuta formato, compilación Release con avisos como errores, pruebas con
-cobertura, comprobación de dependencias vulnerables, compilación Android con APK de depuración,
-imagen Docker del servidor y despliegue de este sitio en GitHub Pages.
+GitHub Actions runs formatting, a Release build with warnings as errors, tests with coverage, a
+vulnerable-dependency check, the Android build with a downloadable debug APK, the signaling server's
+Docker image, and the deployment of the site to GitHub Pages.
 
-## Ejecutarlo
+## Running it
 
-Requisitos: [.NET SDK 10](https://dotnet.microsoft.com/download). Para la app: `dotnet workload install maui-android` y el SDK de Android.
+Requirements: [.NET SDK 10](https://dotnet.microsoft.com/download). For the app:
+`dotnet workload install maui-android` and the Android SDK.
 
 ```bash
-# Pruebas (la solución no incluye la app MAUI, compila en cualquier SO)
+# Tests (the solution excludes the MAUI app, so it builds on any OS)
 dotnet test Murmur.slnx
 
-# Servidor de signaling
+# Signaling server
 dotnet run --project src/Murmur.Signaling.Server --urls http://0.0.0.0:8080
-# o
+# or
 docker build -f src/Murmur.Signaling.Server/Dockerfile -t murmur-signaling .
 docker run -p 8080:8080 murmur-signaling
 
-# App Android (Debug: incluye el transporte de desarrollo)
+# Android app (Debug: includes the development transport)
 dotnet build src/Murmur.App -f net10.0-android -t:Run
 ```
 
-El emulador de Android apunta por defecto a `ws://10.0.2.2:8080/ws`; en teléfonos reales cambia el
-servidor en **Ajustes**. En producción el servidor va detrás de un proxy TLS (Release exige `wss://`);
-activa `ASPNETCORE_FORWARDEDHEADERS_ENABLED=true` si el proxy reenvía la IP del cliente.
+The Android emulator points to `ws://10.0.2.2:8080/ws` by default; on real phones change the server
+in **Settings**. In production the server sits behind a TLS proxy (Release builds require `wss://`);
+set `ASPNETCORE_FORWARDEDHEADERS_ENABLED=true` if the proxy forwards the client's IP address.
 
-Sitio de documentación en local: `cd website && npm ci && npm run dev`.
+Documentation site locally: `cd website && npm ci && npm run dev`.
 
-## Estructura del repositorio
+## Repository layout
 
 ```text
 src/
-  Murmur.Domain/            Entidades, casos de uso, entrega, máquina de estados, puertos
-  Murmur.Protocol/          CBOR, JSON de signaling, límites
-  Murmur.Security/          Noise, identidad, invitaciones, código de seguridad, temas
-  Murmur.Storage/           SQLCipher, migraciones, repositorios
-  Murmur.Networking/        Cliente de signaling, transportes, sesión Noise, conexiones, emparejamiento
-  Murmur.Client/            MurmurClient (raíz de composición)
-  Murmur.Presentation/      ViewModels MVVM
-  Murmur.App/               App .NET MAUI (Android)
-  Murmur.Signaling.Server/  Servidor ASP.NET Core
-tests/                       Unitarios, vectores, integración
-docs/                        Arquitectura, protocolo, amenazas, ADRs, documento original
-website/                     Sitio VitePress publicado en GitHub Pages
+  Murmur.Domain/            Entities, use cases, delivery, state machine, ports
+  Murmur.Protocol/          CBOR, signaling JSON, limits
+  Murmur.Security/          Noise, identity, invites, safety number, topics
+  Murmur.Storage/           SQLCipher, migrations, repositories
+  Murmur.Networking/        Signaling client, transports, Noise session, connections, pairing
+  Murmur.Client/            MurmurClient (composition root), background delivery pass
+  Murmur.Presentation/      MVVM view models
+  Murmur.App/               .NET MAUI app (Android), WorkManager job and foreground service
+  Murmur.Signaling.Server/  ASP.NET Core server
+tests/                      Unit, vectors, integration
+docs/                       Architecture, protocol, threats, ADRs, original document (Spanish)
+website/                    VitePress site (English and Spanish) published to GitHub Pages
 ```
 
-## Estado y hoja de ruta
+## Status and roadmap
 
-| Fase | Estado |
+| Phase | Status |
 |---|---|
-| 1. Identidad, Keystore, SQLCipher, dominio, migraciones | ✅ |
-| 2. Emparejamiento QR y código de seguridad | ✅ |
-| 3. Signaling: presencia, temas rotativos, reconexión, límites | ✅ |
-| 4. P2P real con WebRTC DataChannel | ⏳ siguiente |
-| 5. Mensajes E2EE, outbox, ACK, idempotencia, Lamport, contrapresión | ✅ (sobre transporte simulado y relay de desarrollo) |
-| 6. Robustez en dispositivos reales | ⏳ |
-| 7. Adjuntos | ⏳ |
-| Auditoría de seguridad independiente | ⏳ antes de cualquier uso real |
+| 1. Identity, Keystore, SQLCipher, domain, migrations | ✅ |
+| 2. QR pairing and safety number | ✅ |
+| 3. Signaling: presence, rotating topics, reconnection, limits | ✅ |
+| 4. Real P2P with a WebRTC DataChannel | ⏳ next |
+| 5. E2EE messages, outbox, ACK, idempotency, Lamport, backpressure | ✅ (on the simulated transport and the development relay) |
+| 6. Background delivery and *Always available* (Android) | ✅ |
+| 6b. Robustness on real devices, push for iOS | ⏳ |
+| 7. Attachments | ⏳ |
+| Independent security audit | ⏳ before any real use |
 
-Fuera del MVP, a propósito: grupos, llamadas, backups en la nube, multi-dispositivo completo, TURN
-propio, Bluetooth, directorio de usuarios y versión web. Las razones de cada decisión están en los
+Deliberately out of the MVP: groups, calls, cloud backups, full multi-device, a self-hosted TURN,
+Bluetooth, a user directory and a web version. The reasoning behind each decision is in the
 [ADRs](docs/adr/README.md).
 
-## Licencia
+## License
 
-Código bajo **GNU AGPL-3.0-only** ([`LICENSE`](LICENSE)): cualquier derivado, incluido un servidor
-modificado ofrecido como servicio, debe seguir siendo auditable. Especificación y documentación bajo
-**CC BY 4.0** ([`docs/LICENSE-CC-BY-4.0.txt`](docs/LICENSE-CC-BY-4.0.txt)). Contribuciones bajo
+Code under the **GNU AGPL-3.0-only** ([`LICENSE`](LICENSE)): any derivative, including a modified
+server offered as a service, must remain auditable. Specification and documentation under
+**CC BY 4.0** ([`docs/LICENSE-CC-BY-4.0.txt`](docs/LICENSE-CC-BY-4.0.txt)). Contributions under the
 [DCO](CONTRIBUTING.md).

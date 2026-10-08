@@ -1,0 +1,327 @@
+<p align="center">
+  <img src="website/public/favicon.svg" width="72" alt="Logo de Murmur">
+</p>
+
+<h1 align="center">Murmur</h1>
+
+<p align="center">
+  <b>Mensajería privada, local-first, cifrada de extremo a extremo y peer-to-peer.</b><br>
+  Sin cuentas, sin teléfono, sin email. Sin servidores que guarden tus conversaciones.
+</p>
+
+<p align="center">
+  <a href="https://fsoftt.github.io/Murmur/es/"><b>📖 Sitio del proyecto</b></a> ·
+  <a href="docs/architecture.md">Arquitectura</a> ·
+  <a href="docs/protocol/spec.md">Protocolo</a> ·
+  <a href="docs/threat-model.md">Modelo de amenazas</a> ·
+  <a href="docs/adr/README.md">Decisiones</a> ·
+  <a href="CONTRIBUTING.md">Contribuir</a>
+</p>
+
+<p align="center">
+  <a href="README.md">🇬🇧 English</a> · 🇪🇸 Español
+</p>
+
+<p align="center">
+  <a href="https://github.com/fsoftt/Murmur/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/fsoftt/Murmur/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://fsoftt.github.io/Murmur/es/"><img alt="Docs" src="https://img.shields.io/badge/docs-fsoftt.github.io%2FMurmur-1f6feb"></a>
+  <img alt=".NET 10" src="https://img.shields.io/badge/.NET-10-512BD4">
+  <img alt=".NET MAUI" src="https://img.shields.io/badge/app-.NET%20MAUI%20Android-3DDC84">
+  <a href="LICENSE"><img alt="Licencia AGPL-3.0" src="https://img.shields.io/badge/licencia-AGPL--3.0-blue"></a>
+</p>
+
+> [!WARNING]
+> **Pre-alfa y sin auditar.** No uses Murmur para comunicaciones sensibles hasta que exista una
+> auditoría de seguridad independiente. Consulta el [modelo de amenazas](docs/threat-model.md).
+
+---
+
+## Contenido
+
+- [Qué es](#qué-es)
+- [Cómo funciona, en una imagen](#cómo-funciona-en-una-imagen)
+- [Las reglas del juego](#las-reglas-del-juego)
+- [La vida de un mensaje](#la-vida-de-un-mensaje)
+- [Entregar sin abrir la app](#entregar-sin-abrir-la-app)
+- [Emparejamiento por QR](#emparejamiento-por-qr)
+- [Arquitectura](#arquitectura)
+- [Técnicas y dónde están en el código](#técnicas-y-dónde-están-en-el-código)
+- [Seguridad y privacidad](#seguridad-y-privacidad)
+- [Pruebas y CI](#pruebas-y-ci)
+- [Ejecutarlo](#ejecutarlo)
+- [Estructura del repositorio](#estructura-del-repositorio)
+- [Estado y hoja de ruta](#estado-y-hoja-de-ruta)
+- [Licencia](#licencia)
+
+---
+
+## Qué es
+
+Murmur es una aplicación de mensajería con tres propiedades que normalmente no van juntas:
+
+1. **Local-first.** Tus conversaciones viven en tus dispositivos, en una base de datos cifrada. No hay copia en ningún servidor.
+2. **Cifrado de extremo a extremo.** Solo los dos teléfonos de la conversación pueden leer los mensajes.
+3. **Peer-to-peer.** Los mensajes viajan directamente de teléfono a teléfono; el servidor solo ayuda a que se encuentren.
+
+> **Principio rector:** si una funcionalidad puede hacerse de forma segura en el dispositivo,
+> necesita una buena razón para ir al servidor.
+
+| Mensajería habitual | Murmur |
+|---|---|
+| Te registras con tu número o email | Tu identidad es un par de claves generado en tu teléfono |
+| El servidor guarda los mensajes hasta que los recibes | No hay buzón: el mensaje espera **en el teléfono de quien lo envía** |
+| El servidor sabe quién es contacto de quién | Los contactos solo existen en los dos teléfonos |
+| Añades contactos por su número | Os emparejáis **en persona** escaneando un QR |
+
+## Cómo funciona, en una imagen
+
+```mermaid
+flowchart LR
+    A["📱 Ana<br/>SQLCipher + Keystore"] <== "Noise_KK cifrado<br/>peer-to-peer" ==> B["📱 Beto<br/>SQLCipher + Keystore"]
+    A -. "tema aleatorio del día" .-> S[("Servidor de signaling<br/>sin base de datos")]
+    B -. "tema aleatorio del día" .-> S
+```
+
+- Cada teléfono genera su **identidad** (claves Ed25519 y X25519) y guarda las privadas en el **Android Keystore**.
+- Dos personas se **emparejan escaneando un QR** firmado, de un solo uso.
+- Cada pareja deriva un **tema de encuentro** que solo ella puede calcular y que cambia cada día. El
+  servidor de signaling solo ve "dos conexiones en un tema aleatorio".
+- Cuando ambos teléfonos son alcanzables, abren una conexión directa y un **handshake Noise** nuevo,
+  con *forward secrecy*.
+- Los mensajes se guardan primero en un **outbox local** (SQLCipher) y se marcan como entregados solo
+  cuando el otro confirma que los **guardó**.
+
+## Las reglas del juego
+
+Decisiones de producto explícitas, no letra pequeña:
+
+| Regla | Consecuencia |
+|---|---|
+| Se entrega solo si **ambos teléfonos son alcanzables a la vez** | Si el otro no lo es, el mensaje espera en tu teléfono (🕒). Ningún servidor lo guarda. |
+| [Entrega en segundo plano](#entregar-sin-abrir-la-app) | Tu teléfono sigue intentándolo cada 15 minutos con la app cerrada. Con **Siempre disponible** también puede recibir con la app cerrada. |
+| Conexión directa | **Tus contactos ven tu IP pública** mientras habláis. |
+| Sin TURN en el MVP | En algunas redes (NAT estricto del operador, redes corporativas) no hay ruta directa y los mensajes siguen pendientes. |
+| Sin recuperación | Perder el teléfono es perder identidad, contactos e historial. |
+| "Borrar" es borrar en tu teléfono | Nadie puede garantizar el borrado en el teléfono del otro. |
+
+## La vida de un mensaje
+
+```mermaid
+sequenceDiagram
+    actor Ana
+    participant DA as SQLCipher (Ana)
+    participant S as Signaling
+    participant B as Teléfono de Beto
+    Ana->>DA: "Hola" → INSERT (Pending, lamport+1)
+    Note over Ana: 🕒 pendiente en este dispositivo
+    DA-->>S: sub [tema del día]
+    B-->>S: sub [mismo tema]
+    S-->>DA: presence = 1
+    DA->>B: enlace P2P + Noise_KK (2 mensajes)
+    DA->>B: ChatMessage cifrado
+    Note over Ana: ↑ transmitido, esperando confirmación
+    B->>B: INSERT si no existe (idempotente)
+    B->>DA: Ack (solo después de guardar)
+    Note over Ana: ✓ entregado
+```
+
+| Si… | Entonces… |
+|---|---|
+| se pierde el ACK | se reenvía con backoff exponencial y jitter; el receptor no lo duplica y vuelve a confirmar |
+| se corta la red | la sesión termina, se reconecta con backoff y se reenvía lo no confirmado |
+| se cierra la app | el mensaje sigue en la base; un trabajo en segundo plano sigue intentándolo |
+| llegan miles de mensajes | el receptor aplica contrapresión: 20/s tras una ráfaga de 200 |
+| alguien altera un byte | ChaCha20-Poly1305 lo detecta y la sesión se cierra |
+| los relojes difieren | el orden lo dan los relojes de Lamport, no la hora |
+| bloqueas al contacto en mitad de una sesión | no se guarda ni se confirma nada más |
+
+## Entregar sin abrir la app
+
+Los sistemas móviles suspenden las apps en segundo plano, así que Murmur ofrece dos mecanismos en
+Android ([ADR-012](docs/adr/ADR-012-background-delivery.md)). Ninguno guarda nada en un servidor.
+
+| Mecanismo | Qué hace | Coste |
+|---|---|---|
+| **Entrega en segundo plano** (siempre activa) | Un trabajo de WorkManager se ejecuta cada 15 minutos con red, y una vez al salir de la app. Arranca el cliente e intenta entregar todo lo pendiente durante unos minutos. | Ninguno visible. |
+| **Siempre disponible** (opcional) | Un servicio en primer plano mantiene el teléfono conectado al signaling con la app cerrada, para que tus contactos te alcancen. Vuelve tras reiniciar. | Una notificación permanente y algo de batería. Murmur avisa si la optimización de batería puede pausarlo. |
+
+Con la entrega en segundo plano en el emisor y *Siempre disponible* en el receptor, la entrega ya no
+depende de abrir la app a la vez. Las notificaciones de mensajes nuevos muestran solo el nombre del
+contacto, **nunca el texto**. iOS necesitará un aviso push sin contenido (decisión aparte).
+
+## Emparejamiento por QR
+
+```mermaid
+sequenceDiagram
+    participant TB as Beto (muestra QR)
+    participant S as Signaling
+    participant TA as Ana (escanea)
+    TB->>TB: invitación = tarjeta + token de un solo uso + caducidad, firmada
+    TB->>S: sub [HKDF(token)]
+    TA->>TA: verifica firma y caducidad sin red
+    TA->>S: sub [HKDF(token)]
+    TA->>TB: Noise_IK msg 1: tarjeta de Ana + token (cifrados)
+    TB->>TB: token válido · tarjeta firmada · estática probada por el handshake
+    TB->>TB: guarda a Ana
+    TB->>TA: Noise_IK msg 2
+    TA->>TA: guarda a Beto
+    Note over TA,TB: Contacto "sin verificar" hasta comparar el código de seguridad (60 dígitos)
+```
+
+El QR solo contiene **claves públicas** y un token aleatorio que caduca a los 10 minutos.
+
+## Arquitectura
+
+**Clean Architecture** con **MVVM**: las dependencias apuntan hacia el dominio, y el dominio no
+conoce SQLite, Noise, WebSockets ni MAUI.
+
+```mermaid
+flowchart TB
+    App["Murmur.App<br/>vistas MAUI, segundo plano Android"] --> Presentation["Murmur.Presentation<br/>ViewModels"]
+    Presentation --> Client["Murmur.Client<br/>raíz de composición"]
+    Client --> Networking["Murmur.Networking<br/>signaling · P2P · Noise · emparejamiento"]
+    Client --> Storage["Murmur.Storage<br/>SQLCipher · migraciones"]
+    Networking --> Domain["Murmur.Domain<br/>entidades · casos de uso · outbox · estados"]
+    Storage --> Domain
+    Networking --> Security["Murmur.Security<br/>Noise · identidad · invitaciones"]
+    Security --> Protocol["Murmur.Protocol<br/>CBOR · JSON · límites"]
+    Networking --> Protocol
+    Server["Murmur.Signaling.Server<br/>ASP.NET Core"] --> Protocol
+```
+
+El transporte entre teléfonos es intercambiable (`IPeerLink`: fiable, ordenado, por mensajes). La
+confidencialidad la pone Noise por encima, así que ningún transporte necesita ser de confianza:
+
+| Transporte | Uso |
+|---|---|
+| WebRTC DataChannel (binding de `stream-webrtc-android`) | Producción, fase 4 |
+| `InMemoryPeerLinkNetwork` | Tests: simula NAT inalcanzable y caídas |
+| `DevRelayPeerLinkFactory` | Solo compilaciones Debug: canal cifrado por el relay del servidor |
+| `UnavailablePeerLinkFactory` | Release hasta la fase 4 |
+
+Más detalle en [`docs/architecture.md`](docs/architecture.md) y en el
+[sitio](https://fsoftt.github.io/Murmur/es/guide/architecture).
+
+## Técnicas y dónde están en el código
+
+| Técnica | Para qué | Dónde |
+|---|---|---|
+| **Noise_KK / Noise_IK** (25519, ChaChaPoly, SHA-256) | Autenticación mutua y claves nuevas por conexión (*forward secrecy*) | [`Security/Noise`](src/Murmur.Security/Noise) · [`SecureHandshake.cs`](src/Murmur.Networking/Secure/SecureHandshake.cs) |
+| **Vectores de prueba independientes** | Nuestro Noise produce los mismos bytes que `noiseprotocol` (Python) | [`NoiseVectorTests.cs`](tests/Murmur.Security.Tests/NoiseVectorTests.cs) |
+| **Ed25519 / X25519** | Firmar tarjetas e invitaciones; acordar secretos | [`Curve25519.cs`](src/Murmur.Security/Primitives/Curve25519.cs) · [`LocalIdentityKeys.cs`](src/Murmur.Security/Identity/LocalIdentityKeys.cs) |
+| **ChaCha20-Poly1305** con nonces de contador | Cifrado autenticado; detecta manipulación, replay y reordenamiento | [`ChaChaPoly.cs`](src/Murmur.Security/Primitives/ChaChaPoly.cs) · [`CipherState.cs`](src/Murmur.Security/Noise/CipherState.cs) |
+| **HKDF** y temas de encuentro rotativos | Presencia sin revelar identidades | [`Rendezvous.cs`](src/Murmur.Security/Identity/Rendezvous.cs) |
+| **Invitaciones firmadas de un solo uso** | Emparejamiento por QR sin secretos en el código | [`InviteService.cs`](src/Murmur.Security/Identity/InviteService.cs) · [`PairingService.cs`](src/Murmur.Networking/Pairing/PairingService.cs) |
+| **Código de seguridad** (estilo Signal) y huella visual | Detectar a un impostor | [`SafetyNumber.cs`](src/Murmur.Security/Identity/SafetyNumber.cs) · [`Fingerprint.cs`](src/Murmur.Presentation/Formatting/Fingerprint.cs) |
+| **CBOR estricto** con límites previos | Formato de cable compacto, evolutivo y resistente a entradas hostiles | [`Protocol/Frames`](src/Murmur.Protocol/Frames) · [`CborMap.cs`](src/Murmur.Protocol/Serialization/CborMap.cs) |
+| **Outbox transaccional** | Ningún mensaje se pierde aunque la app muera | [`SendMessage.cs`](src/Murmur.Domain/UseCases/SendMessage.cs) |
+| **ACK tras persistir + recepción idempotente** | Ni pérdidas ni duplicados | [`ConversationSyncSession.cs`](src/Murmur.Domain/Delivery/ConversationSyncSession.cs) · [`SqliteMessageRepository.cs`](src/Murmur.Storage/Repositories/SqliteMessageRepository.cs) |
+| **Backoff exponencial con jitter** | Reintentos sin saturar | [`Backoff.cs`](src/Murmur.Domain/Common/Backoff.cs) |
+| **Relojes de Lamport** | Mismo orden en ambos teléfonos, inmune al desfase de relojes | [`MessageRules.cs`](src/Murmur.Domain/Model/MessageRules.cs) |
+| **Máquina de estados explícita** | Ciclo de vida de la conexión sin estados imposibles | [`PeerConnectionStateMachine.cs`](src/Murmur.Domain/Connections/PeerConnectionStateMachine.cs) |
+| **Token bucket y contrapresión** | Frenar a un emisor rápido sin perder mensajes | [`TokenBucket.cs`](src/Murmur.Domain/Common/TokenBucket.cs) |
+| **SQLCipher + Keystore** | Base cifrada; la clave nunca está junto al fichero | [`SqliteDatabase.cs`](src/Murmur.Storage/Database/SqliteDatabase.cs) · [`MauiSecretStore.cs`](src/Murmur.App/Services/MauiSecretStore.cs) |
+| **Migraciones versionadas** | Evolucionar el esquema sin perder datos | [`Migrations.cs`](src/Murmur.Storage/Database/Migrations.cs) |
+| **WorkManager + servicio en primer plano** | Entregar y seguir localizable con la app cerrada | [`OutboxWorker.cs`](src/Murmur.App/Platforms/Android/Background/OutboxWorker.cs) · [`AvailabilityForegroundService.cs`](src/Murmur.App/Platforms/Android/Background/AvailabilityForegroundService.cs) |
+| **Límites anti-abuso** en el servidor | Temas, miembros, conexiones por IP, ritmo, colas acotadas | [`SignalingSession.cs`](src/Murmur.Signaling.Server/SignalingSession.cs) |
+| **Clean Architecture + MVVM** | Dominio sin dependencias; ViewModels testeables en cualquier SO | [`Murmur.Domain`](src/Murmur.Domain) · [`Murmur.Presentation`](src/Murmur.Presentation) |
+
+Cada técnica tiene una página explicativa en [el sitio](https://fsoftt.github.io/Murmur/es/concepts/).
+
+## Seguridad y privacidad
+
+| | Contenido | Contactos | Quién habla con quién | Tu IP |
+|---|---|---|---|---|
+| **Servidor de signaling** | ❌ | ❌ | Solo "dos conexiones comparten un tema aleatorio hoy" | ✅ |
+| **Red o Wi-Fi hostil** | ❌ | ❌ | Tráfico entre dos IPs | ✅ |
+| **Tu contacto** | ✅ | — | — | ✅ |
+| **Ladrón con el teléfono bloqueado** | ❌ | ❌ | ❌ | — |
+| **Malware en tu teléfono desbloqueado** | ✅ | ✅ | ✅ | ✅ |
+
+- **Nunca** se registran mensajes, claves, tokens, invitaciones, temas ni IPs.
+- Sin SDKs de analítica, publicidad ni crash reporting. Copias de seguridad de Android desactivadas.
+- Un test graba **todo** el tráfico del servidor y comprueba que no contiene contenido, nombres ni claves de identidad.
+- Vulnerabilidades: ver [`SECURITY.md`](SECURITY.md).
+
+## Pruebas y CI
+
+137 tests automatizados:
+
+| Proyecto | Cubre |
+|---|---|
+| `Murmur.Protocol.Tests` | Formatos de cable, compatibilidad hacia delante, límites, **fuzzing** (20 000 entradas) |
+| `Murmur.Security.Tests` | **Vectores Noise independientes**, manipulación, replay, invitaciones, código de seguridad, temas |
+| `Murmur.Core.Tests` | SQLCipher real (sin texto plano en disco), repositorios, Lamport, máquina de estados, entrega con fallos inyectados, bloqueo en mitad de una sesión |
+| `Murmur.IntegrationTests` | **Servidor real en proceso + dos dispositivos completos**: emparejamiento, offline, emisor offline, entrega en segundo plano con la app cerrada, caídas de red, peer inalcanzable, bloqueo, reinicios, el servidor no ve contenido, ViewModels |
+
+La CI de GitHub Actions ejecuta formato, compilación Release con avisos como errores, pruebas con
+cobertura, comprobación de dependencias vulnerables, compilación Android con APK de depuración,
+imagen Docker del servidor y despliegue del sitio en GitHub Pages.
+
+## Ejecutarlo
+
+Requisitos: [.NET SDK 10](https://dotnet.microsoft.com/download). Para la app:
+`dotnet workload install maui-android` y el SDK de Android.
+
+```bash
+# Pruebas (la solución no incluye la app MAUI, compila en cualquier SO)
+dotnet test Murmur.slnx
+
+# Servidor de signaling
+dotnet run --project src/Murmur.Signaling.Server --urls http://0.0.0.0:8080
+# o
+docker build -f src/Murmur.Signaling.Server/Dockerfile -t murmur-signaling .
+docker run -p 8080:8080 murmur-signaling
+
+# App Android (Debug: incluye el transporte de desarrollo)
+dotnet build src/Murmur.App -f net10.0-android -t:Run
+```
+
+El emulador de Android apunta por defecto a `ws://10.0.2.2:8080/ws`; en teléfonos reales cambia el
+servidor en **Ajustes**. En producción el servidor va detrás de un proxy TLS (Release exige `wss://`);
+activa `ASPNETCORE_FORWARDEDHEADERS_ENABLED=true` si el proxy reenvía la IP del cliente.
+
+Sitio de documentación en local: `cd website && npm ci && npm run dev`.
+
+## Estructura del repositorio
+
+```text
+src/
+  Murmur.Domain/            Entidades, casos de uso, entrega, máquina de estados, puertos
+  Murmur.Protocol/          CBOR, JSON de signaling, límites
+  Murmur.Security/          Noise, identidad, invitaciones, código de seguridad, temas
+  Murmur.Storage/           SQLCipher, migraciones, repositorios
+  Murmur.Networking/        Cliente de signaling, transportes, sesión Noise, conexiones, emparejamiento
+  Murmur.Client/            MurmurClient (raíz de composición), pasada de entrega en segundo plano
+  Murmur.Presentation/      ViewModels MVVM
+  Murmur.App/               App .NET MAUI (Android), trabajo WorkManager y servicio en primer plano
+  Murmur.Signaling.Server/  Servidor ASP.NET Core
+tests/                      Unitarios, vectores, integración
+docs/                       Arquitectura, protocolo, amenazas, ADRs, documento original
+website/                    Sitio VitePress (inglés y español) publicado en GitHub Pages
+```
+
+## Estado y hoja de ruta
+
+| Fase | Estado |
+|---|---|
+| 1. Identidad, Keystore, SQLCipher, dominio, migraciones | ✅ |
+| 2. Emparejamiento QR y código de seguridad | ✅ |
+| 3. Signaling: presencia, temas rotativos, reconexión, límites | ✅ |
+| 4. P2P real con WebRTC DataChannel | ⏳ siguiente |
+| 5. Mensajes E2EE, outbox, ACK, idempotencia, Lamport, contrapresión | ✅ (sobre transporte simulado y relay de desarrollo) |
+| 6. Entrega en segundo plano y *Siempre disponible* (Android) | ✅ |
+| 6b. Robustez en dispositivos reales, push para iOS | ⏳ |
+| 7. Adjuntos | ⏳ |
+| Auditoría de seguridad independiente | ⏳ antes de cualquier uso real |
+
+Fuera del MVP, a propósito: grupos, llamadas, backups en la nube, multi-dispositivo completo, TURN
+propio, Bluetooth, directorio de usuarios y versión web. Las razones de cada decisión están en los
+[ADRs](docs/adr/README.md).
+
+## Licencia
+
+Código bajo **GNU AGPL-3.0-only** ([`LICENSE`](LICENSE)): cualquier derivado, incluido un servidor
+modificado ofrecido como servicio, debe seguir siendo auditable. Especificación y documentación bajo
+**CC BY 4.0** ([`docs/LICENSE-CC-BY-4.0.txt`](docs/LICENSE-CC-BY-4.0.txt)). Contribuciones bajo
+[DCO](CONTRIBUTING.md).
