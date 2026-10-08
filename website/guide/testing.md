@@ -1,38 +1,38 @@
-# Pruebas y CI
+# Testing and CI
 
 ```mermaid
 flowchart TB
-    E2E["Integración: servidor real + 2 dispositivos completos<br/>emparejamiento · offline · caídas · reinicios · bloqueo · NAT"]
-    VM["ViewModels contra dispositivos reales en proceso"]
-    CORE["Dominio + SQLCipher real<br/>outbox · ACK perdido · 100 mensajes · reinicio · contrapresión"]
-    UNIT["Unitarios: protocolo, fuzzing, vectores Noise, identidad, temas"]
+    E2E["Integration: real server + 2 complete devices<br/>pairing · offline · drops · restarts · blocking · NAT"]
+    VM["ViewModels against real in-process devices"]
+    CORE["Domain + real SQLCipher<br/>outbox · lost ACK · 100 messages · restart · backpressure"]
+    UNIT["Unit: protocol, fuzzing, Noise vectors, identity, topics"]
     UNIT --> CORE --> VM --> E2E
 ```
 
-| Proyecto | Qué cubre |
+| Project | What it covers |
 |---|---|
-| `Murmur.Protocol.Tests` | Ida y vuelta de cada formato, campos desconocidos, claves duplicadas, bytes sobrantes, límites, 20 000 entradas de fuzzing, validación de temas |
-| `Murmur.Security.Tests` | **Vectores Noise KK e IK** de una implementación independiente, prólogos, manipulación, replay, turnos, puntos de orden bajo, invitaciones (caducidad, firma ajena, cualquier bit cambiado), código de seguridad, temas |
-| `Murmur.Core.Tests` | Base cifrada (sin texto plano en disco, clave incorrecta), repositorios, Lamport, idempotencia, máquina de estados, backoff, y entrega entre dos dispositivos con fallos inyectados |
-| `Murmur.IntegrationTests` | Servidor de signaling (límites, presencia, relay, reconexión), escenarios completos, transporte de desarrollo y ViewModels |
+| `Murmur.Protocol.Tests` | Round trips of every format, unknown fields, duplicate keys, trailing bytes, limits, 20,000 fuzzing inputs, topic validation |
+| `Murmur.Security.Tests` | **Noise KK and IK vectors** from an independent implementation, prologues, tampering, replay, turn-taking, low-order points, invites (expiry, foreign signature, any flipped bit), safety number, topics |
+| `Murmur.Core.Tests` | Encrypted database (no plaintext on disk, wrong key), repositories, Lamport, idempotency, state machine, backoff, and delivery between two devices with injected faults |
+| `Murmur.IntegrationTests` | Signaling server (limits, presence, relay, reconnection), full scenarios, development transport and ViewModels |
 
-## Escenarios de extremo a extremo
+## End-to-end scenarios
 
-- Emparejar por QR crea contactos mutuos con el mismo código de seguridad.
-- Un mensaje espera en el emisor hasta que el receptor aparece.
-- **Si el emisor está offline no se entrega nada**, aunque el receptor esté conectado.
-- Una caída de red se recupera sin duplicados.
-- Sin ruta directa los mensajes siguen pendientes hasta que la hay.
-- Un contacto bloqueado no recibe nada.
-- Reiniciar la app conserva identidad, contactos y outbox.
-- **El servidor nunca ve contenido, nombres ni claves de identidad** (se graba todo su tráfico).
-- Invitaciones propias, manipuladas o ya usadas se rechazan.
+- Pairing via QR creates mutual contacts with the same safety number.
+- A message waits on the sender until the recipient shows up.
+- **If the sender is offline nothing is delivered**, even if the recipient is connected.
+- A network drop recovers without duplicates.
+- Without a direct route, messages stay pending until there is one.
+- A blocked contact receives nothing.
+- Restarting the app keeps identity, contacts and outbox.
+- **The server never sees content, names or identity keys** (all of its traffic is recorded).
+- Your own, tampered or already-used invites are rejected.
 
 ## CI (GitHub Actions)
 
-| Job | Pasos |
+| Job | Steps |
 |---|---|
-| Core | `dotnet format --verify-no-changes`, build Release con avisos como errores, tests con cobertura, comprobación de dependencias vulnerables |
-| Android | Workload MAUI, dependencias de Android, build Release, APK Debug descargable |
-| Contenedor | Imagen Docker del servidor de signaling |
-| Pages | Este sitio |
+| Core | `dotnet format --verify-no-changes`, Release build with warnings as errors, tests with coverage, vulnerable-dependency check |
+| Android | MAUI workload, Android dependencies, Release build, downloadable Debug APK |
+| Container | Docker image of the signaling server |
+| Pages | This site |

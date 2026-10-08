@@ -1,70 +1,71 @@
-# Outbox, ACK e idempotencia
+# Outbox, ACKs and idempotency
 
-Tres ideas de sistemas distribuidos que garantizan que un mensaje **no se pierda ni se duplique**.
+Three ideas from distributed systems that guarantee a message is **neither lost nor duplicated**.
 
-## Outbox transaccional
+## Transactional outbox
 
-Al pulsar "Enviar", el mensaje **primero se guarda** en la base local y después se intenta enviar:
+When you tap "Send", the message is **first saved** to the local database and only then is sending
+attempted:
 
 ```text
 BEGIN
   lamport = lamport + 1
-  INSERT mensaje (estado = Pending)
+  INSERT message (state = Pending)
 COMMIT
-→ despertar a la sesión, si hay una
+→ wake up the session, if there is one
 ```
 
-Si la app muere entre medias, el mensaje sigue ahí. El "outbox" son los mensajes salientes en estado
-*Pending* o *Sent*.
+If the app dies in between, the message is still there. The "outbox" is the set of outgoing messages
+in the *Pending* or *Sent* state.
 
-## ACK después de persistir
+## ACK after persisting
 
-"Los bytes salieron de mi teléfono" **no** significa "el otro lo tiene". Solo un **ACK** lo confirma,
-y el receptor lo envía **después** de guardar el mensaje:
+"The bytes left my phone" does **not** mean "the other side has it". Only an **ACK** confirms that,
+and the receiver sends it **after** saving the message:
 
 ```mermaid
 sequenceDiagram
-    participant A as Emisor
-    participant B as Receptor
-    A->>B: Mensaje #123
-    B->>B: guardar (transacción)
+    participant A as Sender
+    participant B as Receiver
+    A->>B: Message #123
+    B->>B: save (transaction)
     B->>A: ACK #123
-    A->>A: marcar Delivered
+    A->>A: mark Delivered
 ```
 
-## Idempotencia
+## Idempotency
 
-Una operación es **idempotente** si hacerla dos veces tiene el mismo efecto que hacerla una. Es
-imprescindible porque los ACK se pierden:
+An operation is **idempotent** if doing it twice has the same effect as doing it once. This is
+essential because ACKs get lost:
 
 ```mermaid
 sequenceDiagram
-    participant A as Emisor
-    participant B as Receptor
-    A->>B: Mensaje #123
-    B->>B: guardado ✅
-    B--xA: ACK #123 (se pierde)
-    Note over A: 10 s sin ACK → reenviar
-    A->>B: Mensaje #123
-    B->>B: ya existe (conversación, #123) → no duplica
-    B->>A: ACK #123 (otra vez)
+    participant A as Sender
+    participant B as Receiver
+    A->>B: Message #123
+    B->>B: saved ✅
+    B--xA: ACK #123 (lost)
+    Note over A: 10 s without ACK → resend
+    A->>B: Message #123
+    B->>B: already exists (conversation, #123) → no duplicate
+    B->>A: ACK #123 (again)
     A->>A: Delivered
 ```
 
-La clave primaria `(conversación, id)` hace que el duplicado no se inserte.
+The primary key `(conversation, id)` prevents the duplicate from being inserted.
 
-## Retransmisión con backoff y jitter
+## Retransmission with backoff and jitter
 
-Sin ACK, se reenvía esperando cada vez más: **backoff exponencial** (10 s, 20 s, 40 s… hasta 2 min).
-Cada espera lleva un margen aleatorio, el **jitter**, para que miles de dispositivos no reintenten
-todos a la vez. Lo mismo vale para reconectar al servidor o a un contacto.
+Without an ACK, the message is resent with ever-longer waits: **exponential backoff** (10 s, 20 s,
+40 s… up to 2 min). Each wait includes a random margin, the **jitter**, so that thousands of devices
+do not all retry at once. The same applies to reconnecting to the server or to a contact.
 
-## Las protecciones contra un par malicioso
+## Protections against a malicious peer
 
-- Un ACK solo marca como entregados mensajes **salientes** de **esa** conversación.
-- Un mensaje entrante con el id de uno propio se ignora.
+- An ACK only marks as delivered **outgoing** messages in **that** conversation.
+- An incoming message carrying the id of one of our own messages is ignored.
 
-**En el código:** [`SendMessage.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Domain/UseCases/SendMessage.cs) ·
+**In the code:** [`SendMessage.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Domain/UseCases/SendMessage.cs) ·
 [`ConversationSyncSession.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Domain/Delivery/ConversationSyncSession.cs) ·
 [`SqliteMessageRepository.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Storage/Repositories/SqliteMessageRepository.cs) ·
 [`Backoff.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Domain/Common/Backoff.cs)

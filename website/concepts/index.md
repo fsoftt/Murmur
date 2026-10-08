@@ -1,45 +1,45 @@
-# Mapa de conceptos
+# Concept map
 
-Murmur combina ideas de criptografía, redes y sistemas distribuidos. Cada página explica un
-concepto desde cero, por qué lo usamos y **dónde está en el código**.
+Murmur combines ideas from cryptography, networking and distributed systems. Each page explains a
+concept from scratch, why we use it and **where it lives in the code**.
 
 ```mermaid
 flowchart LR
-    subgraph Identidad
-      K[Claves y firmas] --> SN[Código de seguridad]
+    subgraph Identity
+      K[Keys and signatures] --> SN[Safety number]
     end
-    subgraph Seguridad
-      K --> N[Noise y forward secrecy]
-      N --> AE[Cifrado autenticado y nonces]
-      TV[Vectores de prueba] -.valida.-> N
+    subgraph Security
+      K --> N[Noise and forward secrecy]
+      N --> AE[Authenticated encryption and nonces]
+      TV[Test vectors] -.validates.-> N
     end
-    subgraph Red
-      R[Signaling y temas de encuentro] --> NAT[NAT, STUN, ICE, TURN, WebRTC]
+    subgraph Network
+      R[Signaling and rendezvous topics] --> NAT[NAT, STUN, ICE, TURN, WebRTC]
       K --> R
     end
-    subgraph Datos
-      WF[Formatos de cable]
-      O[Outbox, ACK e idempotencia] --> L[Relojes de Lamport]
-      O --> BP[Contrapresión]
-      ES[Almacenamiento cifrado]
+    subgraph Data
+      WF[Wire formats]
+      O[Outbox, ACKs and idempotency] --> L[Lamport clocks]
+      O --> BP[Backpressure]
+      ES[Encrypted storage]
     end
-    SM[Máquinas de estados] --> NAT
+    SM[State machines] --> NAT
     N --> O
     WF --> O
 ```
 
-| Concepto | En una frase |
+| Concept | In one sentence |
 |---|---|
-| [Claves, firmas y Diffie-Hellman](./keys-and-signatures) | Demostrar quién eres y acordar un secreto sin enviarlo. |
-| [Noise y forward secrecy](./noise) | El apretón de manos que autentica a los dos y crea claves nuevas en cada conexión. |
-| [Cifrado autenticado y nonces](./authenticated-encryption) | Ocultar el mensaje y detectar cualquier cambio. |
-| [Formatos de cable](./wire-formats) | Cómo se convierten los datos en bytes para viajar. |
-| [Signaling y temas de encuentro](./rendezvous) | Encontrarse sin que el servidor sepa quién eres. |
-| [NAT, STUN, ICE, TURN y WebRTC](./nat-and-p2p) | Por qué conectar dos teléfonos directamente es difícil. |
-| [Outbox, ACK e idempotencia](./outbox-and-acks) | No perder ni duplicar mensajes. |
-| [Relojes de Lamport](./lamport-clocks) | Ordenar sin fiarse de la hora del teléfono. |
-| [Máquinas de estados](./state-machines) | Estados explícitos en lugar de booleanos contradictorios. |
-| [Contrapresión y token bucket](./backpressure) | Frenar al que va demasiado rápido sin cortarlo. |
-| [Almacenamiento cifrado](./encrypted-storage) | Un fichero que no sirve de nada sin la clave del Keystore. |
-| [Código de seguridad](./safety-number) | 60 dígitos para detectar a un impostor. |
-| [Vectores de prueba](./test-vectors) | Cómo saber que el código criptográfico es correcto. |
+| [Keys, signatures and Diffie-Hellman](./keys-and-signatures) | Proving who you are and agreeing on a secret without sending it. |
+| [Noise and forward secrecy](./noise) | The handshake that authenticates both sides and creates fresh keys on every connection. |
+| [Authenticated encryption and nonces](./authenticated-encryption) | Hiding the message and detecting any change. |
+| [Wire formats](./wire-formats) | How data is turned into bytes for the trip. |
+| [Signaling and rendezvous topics](./rendezvous) | Meeting up without the server knowing who you are. |
+| [NAT, STUN, ICE, TURN and WebRTC](./nat-and-p2p) | Why connecting two phones directly is hard. |
+| [Outbox, ACKs and idempotency](./outbox-and-acks) | Never losing or duplicating messages. |
+| [Lamport clocks](./lamport-clocks) | Ordering without trusting the phone's clock. |
+| [State machines](./state-machines) | Explicit states instead of contradictory booleans. |
+| [Backpressure and token bucket](./backpressure) | Slowing down whoever goes too fast without cutting them off. |
+| [Encrypted storage](./encrypted-storage) | A file that is useless without the Keystore key. |
+| [Safety number](./safety-number) | 60 digits to catch an impostor. |
+| [Test vectors](./test-vectors) | How to know the cryptographic code is correct. |

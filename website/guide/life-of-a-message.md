@@ -1,8 +1,8 @@
-# La vida de un mensaje
+# The life of a message
 
-Ana escribe "Hola" a Beto. Así viaja ese mensaje, paso a paso.
+Ana writes "Hi" to Beto. Here's how that message travels, step by step.
 
-## 1. Escribir: primero se guarda
+## 1. Writing: it's stored first
 
 ```mermaid
 sequenceDiagram
@@ -11,92 +11,120 @@ sequenceDiagram
     participant UC as SendMessage
     participant DB as SQLCipher (Ana)
     participant SIG as OutboxSignal
-    Ana->>VM: Enviar "Hola"
-    VM->>UC: ExecuteAsync(contacto, "Hola")
-    UC->>UC: valida (no vacío, ≤ 16 KiB, contacto no bloqueado)
+    Ana->>VM: Send "Hi"
+    VM->>UC: ExecuteAsync(contact, "Hi")
+    UC->>UC: validates (not empty, ≤ 16 KiB, contact not blocked)
     UC->>DB: BEGIN · lamport = lamport + 1 · INSERT (Pending) · COMMIT
-    UC-->>VM: evento MessageStored
-    VM-->>Ana: 🕒 pendiente en este dispositivo
-    UC->>SIG: despierta la sesión de la conversación (si existe)
+    UC-->>VM: MessageStored event
+    VM-->>Ana: 🕒 pending on this device
+    UC->>SIG: wakes the conversation's session (if any)
 ```
 
-El mensaje existe **antes** de intentar enviarlo. Si la app muere ahora, no se pierde nada.
+The message exists **before** any attempt to send it. If the app dies now, nothing is lost.
 
-## 2. Encontrarse
+## 2. Finding each other
 
 ```mermaid
 sequenceDiagram
-    participant A as Teléfono de Ana
-    participant S as Servidor de signaling
-    participant B as Teléfono de Beto
-    A->>S: hello · sub [tema del día]
-    S-->>A: presence(tema, peers = 0)
-    Note over A: Beto no está: el mensaje sigue pendiente
-    B->>S: hello · sub [mismo tema]
-    S-->>A: presence(tema, peers = 1)
-    S-->>B: presence(tema, peers = 1)
-    Note over A,B: Ambos online: inicia quien tiene la clave estática menor
+    participant A as Ana's phone
+    participant S as Signaling server
+    participant B as Beto's phone
+    A->>S: hello · sub [topic of the day]
+    S-->>A: presence(topic, peers = 0)
+    Note over A: Beto isn't here: the message stays pending
+    B->>S: hello · sub [same topic]
+    S-->>A: presence(topic, peers = 1)
+    S-->>B: presence(topic, peers = 1)
+    Note over A,B: Both online: whoever has the lower static key initiates
 ```
 
-El tema es `HKDF(DH(estáticaAna, estáticaBeto), día)`: solo ellos dos pueden calcularlo.
-[Más sobre temas de encuentro](/concepts/rendezvous).
+The topic is `HKDF(DH(staticAna, staticBeto), day)`: only the two of them can compute it.
+[More on rendezvous topics](/concepts/rendezvous).
 
-## 3. Conectarse y autenticarse
+## 3. Connecting and authenticating
 
 ```mermaid
 sequenceDiagram
-    participant A as Ana (inicia)
+    participant A as Ana (initiator)
     participant B as Beto
-    A->>B: enlace P2P (WebRTC en la fase 4)
-    A->>B: Noise_KK mensaje 1: e, es, ss + {versiones}
-    B->>A: Noise_KK mensaje 2: e, ee, se + {versiones}
-    Note over A,B: Dos claves de sesión nuevas · cada uno ha demostrado su identidad<br/>Versión negociada = min(máximos) si ≥ max(mínimos)
+    A->>B: P2P link (WebRTC in phase 4)
+    A->>B: Noise_KK message 1: e, es, ss + {versions}
+    B->>A: Noise_KK message 2: e, ee, se + {versions}
+    Note over A,B: Two fresh session keys · each side has proven its identity<br/>Negotiated version = min(maximums) if ≥ max(minimums)
 ```
 
-Si alguien se hace pasar por Beto, el handshake falla: no tiene su clave privada.
-[Más sobre Noise](/concepts/noise).
+If someone impersonates Beto, the handshake fails: they don't have his private key.
+[More on Noise](/concepts/noise).
 
-## 4. Entregar y confirmar
+## 4. Delivering and acknowledging
 
 ```mermaid
 sequenceDiagram
     participant DA as SQLCipher (Ana)
-    participant A as Sesión de Ana
-    participant B as Sesión de Beto
+    participant A as Ana's session
+    participant B as Beto's session
     participant DB as SQLCipher (Beto)
     A->>DA: ListOutbox
-    A->>B: ChatMessage{id, lamport, hora, "Hola"} (cifrado)
+    A->>B: ChatMessage{id, lamport, time, "Hi"} (encrypted)
     A->>DA: Pending → Sent
-    Note over A: ↑ transmitido, esperando confirmación
-    B->>DB: INSERT si no existe (conversación, id) · reloj = max(reloj, lamport)
-    B->>A: Ack{id} (solo después de guardar)
+    Note over A: ↑ transmitted, awaiting confirmation
+    B->>DB: INSERT if not exists (conversation, id) · clock = max(clock, lamport)
+    B->>A: Ack{id} (only after storing)
     A->>DA: Sent → Delivered
-    Note over A: ✓ entregado
+    Note over A: ✓ delivered
 ```
 
-### ¿Y si algo sale mal?
+### What if something goes wrong?
 
-| Fallo | Qué pasa |
+| Failure | What happens |
 |---|---|
-| Se pierde el ACK | Sin ACK en 10 s, Ana reenvía (10 s → 20 s → … → 2 min, con jitter). Beto ya lo tiene: no lo duplica y vuelve a confirmar. |
-| Se corta la red | La sesión termina; `ContactConnection` pasa a *Reconnecting* y reintenta. Lo no confirmado se reenvía en la siguiente sesión. |
-| Ana cierra la app | El mensaje sigue en su base como *Pending* o *Sent*. Se reenvía al volver. |
-| Beto recibe 10 000 mensajes de golpe | Contrapresión: los lee a 20/s tras una ráfaga de 200, sin cortar la sesión. |
-| Alguien manipula un byte | ChaCha20-Poly1305 lo detecta, la sesión se cierra y se reconecta. |
-| Los relojes de los teléfonos difieren | El orden lo da el reloj de Lamport, no la hora. |
+| The ACK is lost | With no ACK within 10 s, Ana resends (10 s → 20 s → … → 2 min, with jitter). Beto already has it: he doesn't duplicate it and acknowledges again. |
+| The network drops | The session ends; `ContactConnection` moves to *Reconnecting* and retries. Anything unacknowledged is resent in the next session. |
+| Ana closes the app | The message stays in her database as *Pending* or *Sent*. It's resent when she comes back. |
+| Beto receives 10,000 messages at once | Backpressure: he reads them at 20/s after a burst of 200, without dropping the session. |
+| Someone tampers with a byte | ChaCha20-Poly1305 detects it, the session is closed and reconnects. |
+| The phones' clocks disagree | Ordering comes from the Lamport clock, not the wall-clock time. |
 
-## 5. Estados que ve el usuario
+## Without opening the app {#without-opening-the-app}
+
+Android suspends apps in the background, so Murmur relies on two mechanisms
+([ADR-012](/guide/decisions#adr-012)):
+
+```mermaid
+sequenceDiagram
+    participant WM as WorkManager (Ana)
+    participant CA as Ana's client
+    participant SIG as Signaling
+    participant FS as Always-available service (Beto)
+    Note over WM: every 15 min with network,<br/>and when leaving the app
+    WM->>CA: OutboxWorker: DeliverPendingAsync(budget)
+    CA->>SIG: announces rendezvous topics
+    FS->>SIG: Beto is already listening with the app closed
+    SIG-->>CA: Beto present
+    CA->>FS: Noise_KK · MESSAGE · ACK
+    CA-->>WM: 0 pending → done
+    FS-->>FS: "New message" notification (no text)
+```
+
+- **The sender** doesn't need the app open: the job starts the client, waits for ACKs until its
+  time budget runs out and then stops. Anything still pending is retried on the next run.
+- **The recipient** can turn on **Always available** in Settings: a foreground service with a
+  persistent notification keeps the phone reachable and comes back after a reboot. Without it,
+  they receive the next time they open the app.
+- The server still stores nothing, and notifications never show the message text.
+
+## 5. Statuses the user sees
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Pending: guardado localmente
-    Pending --> Sent: transmitido en una sesión
-    Sent --> Delivered: ACK recibido
-    Pending --> Delivered: ACK muy rápido
-    Pending --> Failed: rechazado
-    Failed --> Pending: reintentar
+    [*] --> Pending: stored locally
+    Pending --> Sent: transmitted in a session
+    Sent --> Delivered: ACK received
+    Pending --> Delivered: very fast ACK
+    Pending --> Failed: rejected
+    Failed --> Pending: retry
     Delivered --> [*]
 ```
 
-🕒 pendiente en este dispositivo · ↑ transmitido, esperando confirmación · ✓ entregado · ! no entregado.
-La app **nunca** dice "enviado" cuando el mensaje solo está en tu teléfono.
+🕒 pending on this device · ↑ transmitted, awaiting confirmation · ✓ delivered · ! not delivered.
+The app **never** says "sent" when the message is only on your phone.
