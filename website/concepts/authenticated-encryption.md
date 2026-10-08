@@ -2,14 +2,14 @@
 
 ## AEAD: ocultar y detectar cambios
 
-Directo cifra cada mensaje con **ChaCha20-Poly1305**, un algoritmo **AEAD**
+Murmur cifra cada mensaje con **ChaCha20-Poly1305**, un algoritmo **AEAD**
 (*Authenticated Encryption with Associated Data*):
 
 - **ChaCha20** oculta el contenido.
 - **Poly1305** añade una etiqueta de 16 bytes que detecta **cualquier** modificación. Si cambia un
   solo bit, el descifrado falla.
 
-En Directo, un fallo de autenticación **cierra la sesión** inmediatamente, y la conexión se vuelve a
+En Murmur, un fallo de autenticación **cierra la sesión** inmediatamente, y la conexión se vuelve a
 establecer desde cero.
 
 ## El nonce
@@ -39,6 +39,6 @@ Consecuencias:
 - **Cifrar y enviar deben ir juntos**: si dos hilos cifraran a la vez y enviaran en otro orden, el
   receptor vería nonces desordenados. `SecureSession` lo serializa con un candado.
 
-**En el código:** [`ChaChaPoly.cs`](https://github.com/fsoftt/Directo/blob/main/src/Directo.Security/Primitives/ChaChaPoly.cs) ·
-[`CipherState.cs`](https://github.com/fsoftt/Directo/blob/main/src/Directo.Security/Noise/CipherState.cs) ·
-[`SecureSession.cs`](https://github.com/fsoftt/Directo/blob/main/src/Directo.Networking/Secure/SecureSession.cs)
+**En el código:** [`ChaChaPoly.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Security/Primitives/ChaChaPoly.cs) ·
+[`CipherState.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Security/Noise/CipherState.cs) ·
+[`SecureSession.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Networking/Secure/SecureSession.cs)

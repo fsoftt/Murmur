@@ -1,4 +1,4 @@
-# Protocolo Directo — versión 1
+# Protocolo Murmur — versión 1
 
 > Especificación independiente de la implementación, para que puedan existir clientes
 > compatibles en otras tecnologías. Licencia: CC BY 4.0 (ver `docs/LICENSE-CC-BY-4.0.txt`).
@@ -38,17 +38,17 @@
 ```
 IdentityCard = { 0: 1 (versión), 1: identityKey (bstr 32, Ed25519),
                  2: staticKey (bstr 32, X25519), 3: signature (bstr 64) }
-signature = Ed25519(identityKey, "Directo/v1/identity-card" || identityKey || staticKey)
+signature = Ed25519(identityKey, "Murmur/v1/identity-card" || identityKey || staticKey)
 ```
 
 ## 4. Invitación (contenido del QR)
 
 ```
-texto        = "DIRECTO1:" || base64url_sin_relleno(Envelope)
+texto        = "MURMUR1:" || base64url_sin_relleno(Envelope)
 Envelope     = { 0: bodyBytes (bstr), 1: signature (bstr 64) }
 body         = { 0: 1 (versión), 1: IdentityCard (bstr CBOR), 2: token (bstr 16),
                  3: expiresAt (segundos Unix), 4?: profileName (tstr) }
-signature    = Ed25519(card.identityKey, "Directo/v1/invite" || bodyBytes)
+signature    = Ed25519(card.identityKey, "Murmur/v1/invite" || bodyBytes)
 ```
 
 El verificador DEBE comprobar la firma de la tarjeta, la firma de la invitación sobre los bytes
@@ -62,9 +62,9 @@ Un tema son 32 bytes en base64url sin relleno (43 caracteres, codificación can�
 ```
 epoch          = floor(unixSeconds / 86400)
 contactTopic   = HKDF-SHA256(ikm = X25519(miEstática, suEstática),
-                             salt = "Directo/v1/rendezvous/contact",
+                             salt = "Murmur/v1/rendezvous/contact",
                              info = int64_be(epoch), L = 32)
-pairingTopic   = HKDF-SHA256(ikm = token, salt = "Directo/v1/rendezvous/pairing", info = "", L = 32)
+pairingTopic   = HKDF-SHA256(ikm = token, salt = "Murmur/v1/rendezvous/pairing", info = "", L = 32)
 ```
 
 Un cliente DEBE suscribirse a la época actual y, si está a menos de 1 h de un cambio de día UTC,
@@ -105,11 +105,11 @@ HandshakePayload = { 0: minVersion, 1: maxVersion, 2: [capabilities...],
 
 Versión negociada = `min(maxA, maxB)`, que DEBE ser `≥ max(minA, minB)`; si no, se aborta.
 
-### 8.1 Sesión de contacto — `Noise_KK`, prólogo `"Directo/v1/contact"`
+### 8.1 Sesión de contacto — `Noise_KK`, prólogo `"Murmur/v1/contact"`
 
 Ambos conocen la clave estática del otro desde el emparejamiento. Payloads: solo versiones.
 
-### 8.2 Emparejamiento — `Noise_IK`, prólogo `"Directo/v1/pairing"`
+### 8.2 Emparejamiento — `Noise_IK`, prólogo `"Murmur/v1/pairing"`
 
 - Mensaje 1 (escáner → invitador): payload con `IdentityCard`, `pairingToken` y `profileName` opcional.
 - El invitador DEBE verificar: token igual (tiempo constante), no caducado, no consumido por otra
@@ -146,7 +146,7 @@ visualización: `(lamport, createdAt, messageId)`.
 
 ## 10. Código de seguridad
 
-Para cada clave de identidad `K`: `h = SHA-512(0x00 0x01 || K || "Directo")`, después 5 200 veces
+Para cada clave de identidad `K`: `h = SHA-512(0x00 0x01 || K || "Murmur")`, después 5 200 veces
 `h = SHA-512(h || K)`. Se toman 6 bloques de 5 bytes (big-endian) módulo 100 000 → 30 dígitos.
 El código son los 30 dígitos de ambas partes concatenados en orden ascendente, en grupos de 5.
 

@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Murmur.Domain\Murmur.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Murmur.Storage\Murmur.Storage.csproj" />
+  </ItemGroup>
+</Project>

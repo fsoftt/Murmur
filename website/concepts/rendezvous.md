@@ -17,7 +17,7 @@ estáticas. De él derivan, con **HKDF**, un **tema** de 32 bytes que cambia cad
 
 ```text
 tema = HKDF-SHA256(secreto = X25519(mi estática, su estática),
-                   sal     = "Directo/v1/rendezvous/contact",
+                   sal     = "Murmur/v1/rendezvous/contact",
                    info    = día UTC)
 ```
 
@@ -54,6 +54,6 @@ independientes, así que el mismo secreto sirve para el tema sin debilitar nada 
 IPs, horarios y que dos conexiones comparten un tema durante un día. Es metadata reducida, no cero
 ([privacidad](/guide/privacy)).
 
-**En el código:** [`Rendezvous.cs`](https://github.com/fsoftt/Directo/blob/main/src/Directo.Security/Identity/Rendezvous.cs) ·
-[`SignalingClient.cs`](https://github.com/fsoftt/Directo/blob/main/src/Directo.Networking/Signaling/SignalingClient.cs) ·
-[`SignalingSession.cs`](https://github.com/fsoftt/Directo/blob/main/src/Directo.Signaling.Server/SignalingSession.cs)
+**En el código:** [`Rendezvous.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Security/Identity/Rendezvous.cs) ·
+[`SignalingClient.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Networking/Signaling/SignalingClient.cs) ·
+[`SignalingSession.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Signaling.Server/SignalingSession.cs)

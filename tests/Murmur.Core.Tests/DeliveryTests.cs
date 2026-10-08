@@ -1,0 +1,243 @@
+using Murmur.Core.Tests.Support;
+using Murmur.Domain.Common;
+using Murmur.Domain.Delivery;
+using Murmur.Domain.Model;
+using Murmur.Domain.Ports;
+using Murmur.Domain.UseCases;
+
+namespace Murmur.Core.Tests;
+
+/// <summary>Two devices, each with its own encrypted database, talking over an in-memory channel.</summary>
+public sealed class DeliveryTests : IAsyncLifetime
+{
+    private static readonly DeliveryOptions FastRetransmission = new() { Retransmission = new Backoff(TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(400)) };
+
+    private Device _alice = null!;
+    private Device _bob = null!;
+
+    public async Task InitializeAsync()
+    {
+        _alice = await Device.CreateAsync("Bob");
+        _bob = await Device.CreateAsync("Alice");
+    }
+
+    public async Task DisposeAsync()
+    {
+        await _alice.DisposeAsync();
+        await _bob.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Messages_written_offline_are_delivered_when_both_are_online()
+    {
+        var offline = await _alice.SendAsync("written while Bob was offline");
+        Assert.Equal(MessageStatus.Pending, offline.Status);
+
+        await using var link = Connect();
+
+        await _alice.WaitDeliveredAsync(offline.Id);
+        var received = Assert.Single(await _bob.HistoryAsync());
+        Assert.Equal("written while Bob was offline", received.Body);
+        Assert.Equal(MessageStatus.Received, received.Status);
+    }
+
+    [Fact]
+    public async Task Messages_sent_during_a_session_are_delivered_immediately()
+    {
+        await using var link = Connect();
+
+        var message = await _alice.SendAsync("live");
+
+        await _alice.WaitDeliveredAsync(message.Id);
+    }
+
+    [Fact]
+    public async Task Lost_ack_causes_retransmission_but_no_duplicate()
+    {
+        var message = await _alice.SendAsync("ack will be lost once");
+        var dropped = 0;
+        await using var link = Connect(bobFilter: e => !(e is PeerAckReceived && Interlocked.Increment(ref dropped) == 1));
+
+        await _alice.WaitDeliveredAsync(message.Id);
+
+        Assert.True(link.AliceChannel.MessagesSent >= 2, "Alice should have retransmitted.");
+        Assert.Single(await _bob.HistoryAsync());
+    }
+
+    [Fact]
+    public async Task Hundred_messages_arrive_once_and_in_order()
+    {
+        var sent = new List<Message>();
+        for (var i = 0; i < 100; i++)
+        {
+            sent.Add(await _alice.SendAsync($"message {i:D3}"));
+        }
+
+        await using var link = Connect();
+        await _alice.WaitDeliveredAsync(sent[^1].Id);
+        await Eventually.TrueAsync(async () => (await _alice.Store.Messages.ListOutboxAsync(_alice.Conversation.Id)).Count == 0, "all delivered");
+
+        var history = await _bob.HistoryAsync(200);
+        Assert.Equal(sent.Select(m => m.Body), history.Select(m => m.Body));
+    }
+
+    [Fact]
+    public async Task Connection_drop_and_reconnect_resumes_without_duplicates()
+    {
+        var first = await _alice.SendAsync("before drop");
+        var link = Connect(bobFilter: e => e is not PeerAckReceived);
+        await Eventually.TrueAsync(async () => (await _bob.HistoryAsync()).Count == 1, "Bob stored the message");
+        await link.DisposeAsync();
+
+        Assert.Equal(MessageStatus.Sent, (await _alice.Store.Messages.GetAsync(_alice.Conversation.Id, first.Id))!.Status);
+
+        await using var second = Connect();
+        await _alice.WaitDeliveredAsync(first.Id);
+        Assert.Single(await _bob.HistoryAsync());
+    }
+
+    [Fact]
+    public async Task Outbox_survives_an_app_restart()
+    {
+        var message = await _alice.SendAsync("survives restart");
+        await _alice.RestartAsync();
+
+        await using var link = Connect();
+
+        await _alice.WaitDeliveredAsync(message.Id);
+    }
+
+    [Fact]
+    public async Task Both_sides_agree_on_message_order_with_concurrent_writes()
+    {
+        for (var i = 0; i < 10; i++)
+        {
+            await _alice.SendAsync($"a{i}");
+            await _bob.SendAsync($"b{i}");
+        }
+
+        await using var link = Connect();
+        await Eventually.TrueAsync(async () => (await _alice.HistoryAsync()).Count == 20 && (await _bob.HistoryAsync()).Count == 20, "both have everything");
+
+        Assert.Equal((await _alice.HistoryAsync()).Select(m => m.Id), (await _bob.HistoryAsync()).Select(m => m.Id));
+    }
+
+    [Fact]
+    public async Task A_flooding_peer_is_slowed_down_but_everything_arrives()
+    {
+        const int count = 30;
+        for (var i = 0; i < count; i++)
+        {
+            await _alice.SendAsync($"flood {i}");
+        }
+
+        var started = System.Diagnostics.Stopwatch.StartNew();
+        await using var link = Connect(bobOptions: FastRetransmission with { IncomingMessagesPerSecond = 50, IncomingBurst = 5 });
+        await Eventually.TrueAsync(async () => (await _bob.HistoryAsync()).Count == count, "Bob stored the whole backlog");
+
+        // 5 at full speed, then 25 more at 50/s: at least ~0.5 s.
+        Assert.True(started.Elapsed >= TimeSpan.FromMilliseconds(400), $"Took only {started.Elapsed}.");
+    }
+
+    [Fact]
+    public async Task Messages_are_refused_once_the_contact_is_no_longer_accepted()
+    {
+        var accepting = true;
+        var (a, b) = FakePeerChannel.CreatePair();
+        using var cts = new CancellationTokenSource();
+        var bobSession = new ConversationSyncSession(_bob.Store.Messages, _bob.Store.Outbox, _bob.Store.Events, TimeProvider.System, FastRetransmission)
+            .RunAsync(_bob.Conversation, b, cts.Token, _ => Task.FromResult(accepting));
+        var aliceSession = _alice.Run(a, cts.Token);
+
+        var first = await _alice.SendAsync("antes del bloqueo");
+        await _alice.WaitDeliveredAsync(first.Id);
+        accepting = false;
+        await _alice.SendAsync("después del bloqueo");
+
+        var ex = await Assert.ThrowsAsync<MurmurException>(() => bobSession.WaitAsync(TimeSpan.FromSeconds(5)));
+        Assert.Equal(MurmurErrorCode.ContactBlocked, ex.Code);
+        Assert.Equal(["antes del bloqueo"], (await _bob.HistoryAsync()).Select(m => m.Body));
+        a.Close();
+        await cts.CancelAsync();
+        await aliceSession.WaitAsync(TimeSpan.FromSeconds(5));
+    }
+
+    [Fact]
+    public async Task Session_ends_when_the_channel_closes()
+    {
+        var link = Connect();
+        link.AliceChannel.Close();
+
+        await link.AliceSession.WaitAsync(TimeSpan.FromSeconds(5));
+        await link.BobSession.WaitAsync(TimeSpan.FromSeconds(5));
+        await link.DisposeAsync();
+    }
+
+    private Link Connect(Func<PeerEvent, bool>? aliceFilter = null, Func<PeerEvent, bool>? bobFilter = null, DeliveryOptions? bobOptions = null)
+    {
+        var (a, b) = FakePeerChannel.CreatePair();
+        a.Filter = aliceFilter ?? (_ => true);
+        b.Filter = bobFilter ?? (_ => true);
+        var cts = new CancellationTokenSource();
+        return new Link(a, _alice.Run(a, cts.Token), _bob.Run(b, cts.Token, bobOptions), cts);
+    }
+
+    private sealed record Link(FakePeerChannel AliceChannel, Task AliceSession, Task BobSession, CancellationTokenSource Cancellation) : IAsyncDisposable
+    {
+        public async ValueTask DisposeAsync()
+        {
+            AliceChannel.Close();
+            await Cancellation.CancelAsync();
+            await Task.WhenAll(AliceSession, BobSession).WaitAsync(TimeSpan.FromSeconds(5));
+            Cancellation.Dispose();
+        }
+    }
+
+    private sealed class Device : IAsyncDisposable
+    {
+        private Device(TestStore store, Contact contact, Conversation conversation)
+        {
+            Store = store;
+            Contact = contact;
+            Conversation = conversation;
+        }
+
+        public TestStore Store { get; private set; }
+
+        public Contact Contact { get; }
+
+        public Conversation Conversation { get; }
+
+        public static async Task<Device> CreateAsync(string peerName)
+        {
+            var store = await TestStore.CreateAsync();
+            var (contact, conversation) = await store.AddContactAsync(peerName);
+            return new Device(store, contact, conversation);
+        }
+
+        public Task<Message> SendAsync(string body) =>
+            new SendMessage(Store.Contacts, Store.Conversations, Store.Messages, Store.Outbox, Store.Events, TimeProvider.System)
+                .ExecuteAsync(Contact.Id, body);
+
+        public Task<IReadOnlyList<Message>> HistoryAsync(int limit = 100) => Store.Messages.ListRecentAsync(Conversation.Id, limit);
+
+        public async Task RestartAsync() => Store = await Store.ReopenAsync();
+
+        public Task WaitDeliveredAsync(MessageId id) =>
+            Eventually.TrueAsync(async () => (await Store.Messages.GetAsync(Conversation.Id, id))?.Status == MessageStatus.Delivered, $"message {id} is delivered");
+
+        public async Task Run(IPeerChannel channel, CancellationToken cancellationToken, DeliveryOptions? options = null)
+        {
+            var session = new ConversationSyncSession(Store.Messages, Store.Outbox, Store.Events, TimeProvider.System, options ?? FastRetransmission);
+            try
+            {
+                await session.RunAsync(Conversation, channel, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+        }
+
+        public ValueTask DisposeAsync() => Store.DisposeAsync();
+    }
+}

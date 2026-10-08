@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Murmur.Presentation.ViewModels;assembly=Murmur.Presentation"
+             xmlns:g="clr-namespace:Murmur.App.Graphics"
+             x:Class="Murmur.App.Views.ContactDetailsPage"
+             x:DataType="vm:ContactDetailsViewModel"
+             Title="Contacto">
+    <Grid RowDefinitions="Auto,*">
+        <Grid Padding="10,24,10,4">
+            <Border Style="{StaticResource IconButton}" HorizontalOptions="Start" SemanticProperties.Description="Volver">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </Border.GestureRecognizers>
+                <g:Icon StrokeThickness="2.2" Data="M15 6L9 12L15 18" />
+            </Border>
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="20,0,20,28" Spacing="16">
+                <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                    <Border WidthRequest="84" HeightRequest="84" HorizontalOptions="Center" Style="{StaticResource Avatar}" StrokeShape="RoundRectangle 28"
+                            BackgroundColor="{Binding AvatarColor, Converter={StaticResource HexColor}}">
+                        <Label Text="{Binding Initials}" Style="{StaticResource Initials}" FontSize="30" />
+                    </Border>
+                    <Label Text="{Binding DisplayName}" Style="{StaticResource Title}" HorizontalTextAlignment="Center" />
+                    <Border x:Name="Badge" StrokeThickness="0" StrokeShape="RoundRectangle 999" Padding="12,5" HorizontalOptions="Center">
+                        <HorizontalStackLayout Spacing="6">
+                            <g:Icon x:Name="BadgeIcon" Size="14" StrokeThickness="2.4" Data="M12 3l7 3v6c0 4.5-3 7.8-7 9-4-1.2-7-4.5-7-9V6z M9 12l2 2 4-4" />
+                            <Label x:Name="BadgeText" FontFamily="DMSansSemiBold" FontSize="13" VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- Safety number -->
+                <Border Style="{StaticResource Card}" Padding="18">
+                    <VerticalStackLayout Spacing="14">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="Código de seguridad" Style="{StaticResource Heading}" FontSize="17" />
+                            <Label Grid.Column="1" Text="Comparadlo una vez" Style="{StaticResource Caption}" VerticalOptions="Center" />
+                        </Grid>
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16">
+                            <Border WidthRequest="96" HeightRequest="96" StrokeThickness="0" StrokeShape="RoundRectangle 16" VerticalOptions="Center"
+                                    SemanticProperties.Description="Huella visual de las claves">
+                                <g:FingerprintView Cells="{Binding FingerprintCells}" />
+                            </Border>
+                            <FlexLayout Grid.Column="1" BindableLayout.ItemsSource="{Binding SafetyGroups}" Wrap="Wrap" JustifyContent="SpaceBetween">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="x:String">
+                                        <Label Text="{Binding .}" Style="{StaticResource Mono}" FontSize="14" WidthRequest="58" Margin="0,3" />
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </FlexLayout>
+                        </Grid>
+                        <Label Text="Si la otra persona ve exactamente la misma huella y los mismos números, nadie se ha hecho pasar por ninguno de los dos." Style="{StaticResource Muted}" FontSize="13" />
+                        <Button x:Name="VerifyButton" Clicked="OnVerifyClicked" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Settings for this contact -->
+                <Border Style="{StaticResource Card}" Padding="0">
+                    <VerticalStackLayout>
+                        <Grid Padding="16,14" ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            <VerticalStackLayout Spacing="2" VerticalOptions="Center">
+                                <Label Text="Nombre en este teléfono" Style="{StaticResource Strong}" FontSize="15" />
+                                <Label Text="Solo lo ves tú" Style="{StaticResource Caption}" FontSize="13" />
+                            </VerticalStackLayout>
+                            <Border Grid.Column="1" WidthRequest="150" Padding="10,0" StrokeShape="RoundRectangle 12"
+                                    Stroke="{AppThemeBinding Light={StaticResource BorderLight}, Dark={StaticResource BorderDark}}"
+                                    BackgroundColor="{AppThemeBinding Light={StaticResource BgLight}, Dark={StaticResource BgDark}}">
+                                <Entry Text="{Binding DisplayName}" FontSize="14" ReturnCommand="{Binding SaveNameCommand}" Unfocused="OnNameUnfocused" />
+                            </Border>
+                        </Grid>
+                        <BoxView Style="{StaticResource Divider}" />
+                        <Grid Padding="16,14" ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            <VerticalStackLayout Spacing="2" VerticalOptions="Center">
+                                <Label Text="Bloquear" Style="{StaticResource Strong}" FontSize="15" />
+                                <Label Text="Dejas de buscarle en la red y rechazas sus conexiones" Style="{StaticResource Caption}" FontSize="13" />
+                            </VerticalStackLayout>
+                            <Switch Grid.Column="1" IsToggled="{Binding IsBlocked, Mode=OneWay}" Toggled="OnBlockedToggled" VerticalOptions="Center" OnColor="#DC2626" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Label Text="{Binding ErrorMessage}" IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNull}}" Style="{StaticResource Error}" />
+
+                <VerticalStackLayout Spacing="10">
+                    <Button Text="Borrar historial en este teléfono" Style="{StaticResource SecondaryButton}" Clicked="OnClearClicked" />
+                    <Button Text="Eliminar contacto" Style="{StaticResource DangerButton}" Clicked="OnDeleteClicked" />
+                    <Label Text="Borrar solo afecta a tu teléfono: la otra persona conserva su copia." Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

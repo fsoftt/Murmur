@@ -10,7 +10,7 @@ Hay dos formas de defenderse:
 | Cortar la conexión o descartar | **Leer más despacio**; el emisor espera |
 | Un historial pendiente legítimo nunca termina de entregarse | Todo llega, a un ritmo acotado |
 
-Directo usa **contrapresión**.
+Murmur usa **contrapresión**.
 
 ## El token bucket
 
@@ -33,5 +33,5 @@ flowchart LR
   desincronizaría y la sesión se cortaría. Un test con 80 mensajes falla sin este limitador.
 - **Servidor:** su propio token bucket por conexión; ahí sí se rechaza, porque protege un recurso compartido.
 
-**En el código:** [`TokenBucket.cs`](https://github.com/fsoftt/Directo/blob/main/src/Directo.Domain/Common/TokenBucket.cs) ·
-[`ConversationSyncSession.cs`](https://github.com/fsoftt/Directo/blob/main/src/Directo.Domain/Delivery/ConversationSyncSession.cs)
+**En el código:** [`TokenBucket.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Domain/Common/TokenBucket.cs) ·
+[`ConversationSyncSession.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Domain/Delivery/ConversationSyncSession.cs)

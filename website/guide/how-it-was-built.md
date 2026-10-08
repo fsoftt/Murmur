@@ -1,7 +1,7 @@
 # Cómo se construyó
 
 El proyecto partió de un documento de arquitectura escrito antes de una sola línea de código
-([original](https://github.com/fsoftt/Directo/blob/main/docs/history/arquitectura-inicial.md)).
+([original](https://github.com/fsoftt/Murmur/blob/main/docs/history/arquitectura-inicial.md)).
 Se construyó en pasos pequeños y verificables, siguiendo una regla:
 
 > **Cada capa se prueba antes de construir la siguiente encima.**
@@ -11,7 +11,7 @@ Se construyó en pasos pequeños y verificables, siguiendo una regla:
 La revisión del documento inicial cambió varias decisiones:
 
 - **Noise en lugar de Double Ratchet.** Double Ratchet existe para mensajería asíncrona con buzón.
-  Directo solo entrega con ambos online, así que un handshake nuevo por conexión da *forward
+  Murmur solo entrega con ambos online, así que un handshake nuevo por conexión da *forward
   secrecy* con mucha menos complejidad ([ADR-005](/guide/decisions#adr-005)).
 - **Emparejamiento bidireccional.** El flujo inicial no explicaba cómo conoce el invitador al que
   escanea; se resolvió con Noise_IK.

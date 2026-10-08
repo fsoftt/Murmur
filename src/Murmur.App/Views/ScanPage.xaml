@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Murmur.Presentation.ViewModels;assembly=Murmur.Presentation"
+             xmlns:g="clr-namespace:Murmur.App.Graphics"
+             xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.MAUI.Controls"
+             x:Class="Murmur.App.Views.ScanPage"
+             x:DataType="vm:ScanInviteViewModel"
+             BackgroundColor="{StaticResource ScannerBg}"
+             Title="Escanear">
+    <Grid RowDefinitions="Auto,*,Auto">
+        <zxing:CameraBarcodeReaderView x:Name="Camera" Grid.RowSpan="3" BarcodesDetected="OnBarcodesDetected" />
+
+        <Grid Padding="10,24,10,8" ColumnDefinitions="Auto,*" ColumnSpacing="8">
+            <Border Style="{StaticResource IconButton}" BackgroundColor="#CC131A26" SemanticProperties.Description="Cerrar">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnCloseTapped" />
+                </Border.GestureRecognizers>
+                <g:Icon Size="20" Stroke="White" StrokeThickness="2.2" Data="M6 6l12 12 M18 6L6 18" />
+            </Border>
+            <Label Grid.Column="1" Text="Escanear invitación" Style="{StaticResource Heading}" FontSize="20" TextColor="White" VerticalOptions="Center" />
+        </Grid>
+
+        <!-- Viewfinder -->
+        <VerticalStackLayout Grid.Row="1" VerticalOptions="Center" Spacing="28">
+            <Grid WidthRequest="260" HeightRequest="260" HorizontalOptions="Center">
+                <g:Icon Size="260" Stroke="{StaticResource Accent}" StrokeThickness="4"
+                        Data="M1.2 5.5V3.6a2.4 2.4 0 0 1 2.4-2.4h1.9 M18.5 1.2h1.9a2.4 2.4 0 0 1 2.4 2.4v1.9 M22.8 18.5v1.9a2.4 2.4 0 0 1-2.4 2.4h-1.9 M5.5 22.8H3.6a2.4 2.4 0 0 1-2.4-2.4v-1.9" />
+                <BoxView x:Name="ScanLine" HeightRequest="2" Margin="14,12" VerticalOptions="Start" Color="{StaticResource OnlineDot}" CornerRadius="1">
+                    <BoxView.Shadow>
+                        <Shadow Brush="{StaticResource OnlineDot}" Radius="14" Opacity="0.8" Offset="0,0" />
+                    </BoxView.Shadow>
+                </BoxView>
+            </Grid>
+            <Label Text="{Binding Status}" HorizontalTextAlignment="Center" TextColor="#B8C3D4" FontSize="15" Margin="24,0" />
+        </VerticalStackLayout>
+
+        <!-- Bottom sheet -->
+        <Border Grid.Row="2" Margin="16,0,16,24" Padding="16" BackgroundColor="#131A26" Stroke="#263043" StrokeThickness="1" StrokeShape="RoundRectangle 24">
+            <VerticalStackLayout Spacing="12">
+                <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+                <Label Text="{Binding ErrorMessage}" IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNull}}" TextColor="#FCA5A5" />
+                <Border Padding="14,2" StrokeShape="RoundRectangle 14" Stroke="#263043" BackgroundColor="#0B0F17">
+                    <Entry x:Name="PastedInvite" Placeholder="…o pega aquí el texto de la invitación" TextColor="#E8EDF5" PlaceholderColor="#94A2B8" />
+                </Border>
+                <Button Text="Usar texto pegado" Clicked="OnPasteClicked" />
+            </VerticalStackLayout>
+        </Border>
+    </Grid>
+</ContentPage>

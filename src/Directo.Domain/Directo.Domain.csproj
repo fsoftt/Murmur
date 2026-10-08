@@ -1,9 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-  <!-- The domain has no framework or infrastructure dependencies (Clean Architecture). -->
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-  </PropertyGroup>
-  <ItemGroup>
-    <InternalsVisibleTo Include="Directo.Domain.Tests" />
-  </ItemGroup>
-</Project>

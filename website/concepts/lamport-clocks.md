@@ -34,9 +34,9 @@ que **muestran exactamente el mismo orden** (lo comprueba un test con escrituras
 
 ## Protección
 
-Un par malicioso podría enviar un valor enorme para llevar el contador al desbordamiento. Directo
+Un par malicioso podría enviar un valor enorme para llevar el contador al desbordamiento. Murmur
 acota lo recibido a `contador + 1 000 000`.
 
-**En el código:** [`MessageRules.cs`](https://github.com/fsoftt/Directo/blob/main/src/Directo.Domain/Model/MessageRules.cs) ·
-[`SqliteMessageRepository.cs`](https://github.com/fsoftt/Directo/blob/main/src/Directo.Storage/Repositories/SqliteMessageRepository.cs) ·
+**En el código:** [`MessageRules.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Domain/Model/MessageRules.cs) ·
+[`SqliteMessageRepository.cs`](https://github.com/fsoftt/Murmur/blob/main/src/Murmur.Storage/Repositories/SqliteMessageRepository.cs) ·
 [ADR-011](/guide/decisions#adr-011)

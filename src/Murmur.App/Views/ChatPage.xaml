@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Murmur.Presentation.ViewModels;assembly=Murmur.Presentation"
+             xmlns:g="clr-namespace:Murmur.App.Graphics"
+             x:Class="Murmur.App.Views.ChatPage"
+             x:DataType="vm:ChatViewModel"
+             Title="{Binding Title}">
+    <Grid RowDefinitions="Auto,Auto,*,Auto,Auto">
+
+        <!-- Header -->
+        <Grid Style="{StaticResource Header}" Padding="10,24,10,10" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="6">
+            <Border Style="{StaticResource IconButton}" SemanticProperties.Description="Volver">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </Border.GestureRecognizers>
+                <g:Icon StrokeThickness="2.2" Data="M15 6L9 12L15 18" />
+            </Border>
+            <Grid Grid.Column="1" ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding OpenDetailsCommand}" />
+                </Grid.GestureRecognizers>
+                <Grid WidthRequest="46" HeightRequest="46">
+                    <Border Style="{StaticResource Avatar}" StrokeShape="RoundRectangle 15" WidthRequest="42" HeightRequest="42" HorizontalOptions="Start" VerticalOptions="Start"
+                            BackgroundColor="{Binding AvatarColor, Converter={StaticResource HexColor}}">
+                        <Label Text="{Binding Initials}" Style="{StaticResource Initials}" FontSize="16" />
+                    </Border>
+                    <Ellipse WidthRequest="14" HeightRequest="14" HorizontalOptions="End" VerticalOptions="End" StrokeThickness="3"
+                             Stroke="{AppThemeBinding Light={StaticResource HeaderLight}, Dark={StaticResource HeaderDark}}" Fill="{StaticResource OfflineDot}">
+                        <Ellipse.Triggers>
+                            <DataTrigger TargetType="Ellipse" Binding="{Binding IsConnecting}" Value="True">
+                                <Setter Property="Fill" Value="{StaticResource ConnectingDot}" />
+                            </DataTrigger>
+                            <DataTrigger TargetType="Ellipse" Binding="{Binding IsOnline}" Value="True">
+                                <Setter Property="Fill" Value="{StaticResource OnlineDot}" />
+                            </DataTrigger>
+                        </Ellipse.Triggers>
+                    </Ellipse>
+                </Grid>
+                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="1">
+                    <Label Text="{Binding Title}" Style="{StaticResource Strong}" LineBreakMode="TailTruncation" />
+                    <Label Text="{Binding ConnectionStatus}" Style="{StaticResource Caption}" LineBreakMode="TailTruncation">
+                        <Label.Triggers>
+                            <DataTrigger TargetType="Label" Binding="{Binding IsOnline}" Value="True">
+                                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnlineTextLight}, Dark={StaticResource OnlineTextDark}}" />
+                            </DataTrigger>
+                        </Label.Triggers>
+                    </Label>
+                </VerticalStackLayout>
+            </Grid>
+            <Border Grid.Column="2" Style="{StaticResource IconButton}" SemanticProperties.Description="Detalles del contacto">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding OpenDetailsCommand}" />
+                </Border.GestureRecognizers>
+                <g:Icon Stroke="{AppThemeBinding Light={StaticResource MutedLight}, Dark={StaticResource MutedDark}}"
+                      Data="M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18 M12 11v5 M12 8h.01" />
+            </Border>
+        </Grid>
+        <BoxView Grid.Row="1" Style="{StaticResource Divider}" />
+
+        <!-- Messages -->
+        <CollectionView x:Name="MessagesView" Grid.Row="2" ItemsSource="{Binding Messages}" ItemsUpdatingScrollMode="KeepLastItemInView"
+                        SelectionMode="Single" SelectionChanged="OnSelectionChanged">
+            <CollectionView.Header>
+                <VerticalStackLayout Padding="14,16,14,6" Spacing="10">
+                    <Border Style="{StaticResource Pill}" HorizontalOptions="Center">
+                        <HorizontalStackLayout Spacing="8">
+                            <g:Icon Size="14"
+                                  Stroke="{AppThemeBinding Light={StaticResource MutedLight}, Dark={StaticResource MutedDark}}" Data="M5 11h14v10H5z M8 11V8a4 4 0 0 1 8 0v3" />
+                            <Label Text="Cifrado de extremo a extremo · solo en vuestros teléfonos" Style="{StaticResource Caption}" VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                    </Border>
+                    <Label x:Name="UnverifiedHint" IsVisible="False" HorizontalOptions="Center" Style="{StaticResource Caption}"
+                           TextColor="{AppThemeBinding Light={StaticResource AmberLight}, Dark={StaticResource AmberDark}}"
+                           Text="Identidad sin verificar · toca el nombre para comparar el código" />
+                </VerticalStackLayout>
+            </CollectionView.Header>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="vm:MessageItemViewModel">
+                    <VerticalStackLayout Padding="14,0" Margin="{Binding TopSpacing, Converter={StaticResource TopMargin}}"
+                                         HorizontalOptions="{Binding IsOutgoing, Converter={StaticResource OutgoingAlignment}}">
+                        <Border x:Name="Bubble" Padding="14,10" StrokeThickness="1" MaximumWidthRequest="300"
+                                HorizontalOptions="{Binding IsOutgoing, Converter={StaticResource OutgoingAlignment}}"
+                                StrokeShape="{Binding Corners, Converter={StaticResource BubbleShape}}"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource IncomingBubbleLight}, Dark={StaticResource IncomingBubbleDark}}"
+                                Stroke="{AppThemeBinding Light={StaticResource BorderLight}, Dark={StaticResource BorderDark}}">
+                            <Border.Triggers>
+                                <DataTrigger TargetType="Border" Binding="{Binding IsOutgoing}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="{StaticResource Accent}" />
+                                    <Setter Property="Stroke" Value="{StaticResource Accent}" />
+                                </DataTrigger>
+                                <DataTrigger TargetType="Border" Binding="{Binding IsPending}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PendingBubbleLight}, Dark={StaticResource PendingBubbleDark}}" />
+                                    <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource PendingBubbleLight}, Dark={StaticResource PendingBubbleDark}}" />
+                                </DataTrigger>
+                            </Border.Triggers>
+                            <Label Text="{Binding Body}" FontSize="15" LineHeight="1.3">
+                                <Label.Triggers>
+                                    <DataTrigger TargetType="Label" Binding="{Binding IsOutgoing}" Value="True">
+                                        <Setter Property="TextColor" Value="{StaticResource OnAccent}" />
+                                    </DataTrigger>
+                                    <DataTrigger TargetType="Label" Binding="{Binding IsPending}" Value="True">
+                                        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource PendingBubbleTextLight}, Dark={StaticResource PendingBubbleTextDark}}" />
+                                    </DataTrigger>
+                                </Label.Triggers>
+                            </Label>
+                        </Border>
+                        <HorizontalStackLayout IsVisible="{Binding ShowMeta}" Spacing="5" Margin="4,4,4,2"
+                                               HorizontalOptions="{Binding IsOutgoing, Converter={StaticResource OutgoingAlignment}}">
+                            <Label Text="{Binding Time}" Style="{StaticResource Caption}" FontSize="11" />
+                            <HorizontalStackLayout IsVisible="{Binding IsPending}" Spacing="3">
+                                <g:Icon Size="13"
+                                      Stroke="{AppThemeBinding Light={StaticResource AmberLight}, Dark={StaticResource AmberDark}}"
+                                      Data="M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18 M12 7v5l3 2" />
+                                <Label Text="Pendiente en este dispositivo" FontSize="11" TextColor="{AppThemeBinding Light={StaticResource AmberLight}, Dark={StaticResource AmberDark}}" />
+                            </HorizontalStackLayout>
+                            <HorizontalStackLayout IsVisible="{Binding IsSent}" Spacing="3">
+                                <g:Icon Size="13"
+                                      Stroke="{AppThemeBinding Light={StaticResource MutedLight}, Dark={StaticResource MutedDark}}" Data="M12 19V5 M6 11l6-6 6 6" />
+                                <Label Text="Transmitido" Style="{StaticResource Caption}" FontSize="11" />
+                            </HorizontalStackLayout>
+                            <HorizontalStackLayout IsVisible="{Binding IsDelivered}" Spacing="3">
+                                <g:Icon Size="13" StrokeThickness="2.6"
+                                      Stroke="{AppThemeBinding Light={StaticResource LinkLight}, Dark={StaticResource LinkDark}}" Data="M5 12.5l4.5 4.5L19 7.5" />
+                                <Label Text="Entregado" FontSize="11" TextColor="{AppThemeBinding Light={StaticResource LinkLight}, Dark={StaticResource LinkDark}}" />
+                            </HorizontalStackLayout>
+                            <Label IsVisible="{Binding IsFailed}" Text="No entregado · toca para reintentar" FontSize="11" Style="{StaticResource Error}" />
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+            <CollectionView.Footer>
+                <BoxView HeightRequest="10" Color="Transparent" />
+            </CollectionView.Footer>
+        </CollectionView>
+
+        <Label Grid.Row="3" Padding="16,4" Text="{Binding ErrorMessage}" IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNull}}" Style="{StaticResource Error}" />
+
+        <!-- Composer -->
+        <Grid Grid.Row="4" Style="{StaticResource Header}" Padding="12,10,12,22" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+            <BoxView Grid.ColumnSpan="2" Style="{StaticResource Divider}" VerticalOptions="Start" Margin="-12,-10,-12,0" />
+            <Border StrokeShape="RoundRectangle 22" Padding="14,2" MinimumHeightRequest="50"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource BgLight}, Dark={StaticResource SurfaceDark}}"
+                    Stroke="{AppThemeBinding Light={StaticResource BorderLight}, Dark={StaticResource BorderDark}}">
+                <Editor Text="{Binding Draft}" Placeholder="Escribe un mensaje" AutoSize="TextChanges" MaximumHeightRequest="140" VerticalOptions="Center" />
+            </Border>
+            <Border Grid.Column="1" WidthRequest="50" HeightRequest="50" StrokeThickness="0" StrokeShape="RoundRectangle 18" VerticalOptions="End"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource BorderLight}, Dark={StaticResource BorderDark}}"
+                    SemanticProperties.Description="Enviar">
+                <Border.Triggers>
+                    <DataTrigger TargetType="Border" Binding="{Binding HasDraft}" Value="True">
+                        <Setter Property="BackgroundColor" Value="{StaticResource Accent}" />
+                    </DataTrigger>
+                </Border.Triggers>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding SendCommand}" />
+                </Border.GestureRecognizers>
+                <g:Icon Stroke="White" StrokeThickness="2.2" Data="M5 12L19 5L14 20L11 14Z M11 14L19 5" />
+            </Border>
+        </Grid>
+    </Grid>
+</ContentPage>

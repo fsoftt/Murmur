@@ -1,6 +1,6 @@
 # Privacidad y amenazas
 
-> Resumen del [modelo de amenazas completo](https://github.com/fsoftt/Directo/blob/main/docs/threat-model.md).
+> Resumen del [modelo de amenazas completo](https://github.com/fsoftt/Murmur/blob/main/docs/threat-model.md).
 > **El cifrado de extremo a extremo protege el contenido; no elimina toda la metadata.**
 
 ## Qué ve cada uno

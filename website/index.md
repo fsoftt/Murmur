@@ -2,22 +2,22 @@
 layout: home
 
 hero:
-  name: Directo
+  name: Murmur
   text: Mensajería privada que no necesita un servidor para guardar tus conversaciones
   tagline: Sin cuentas, sin teléfono, sin email. Tus contactos se añaden en persona con un código QR, los mensajes viajan cifrados de teléfono a teléfono y el historial vive solo en tus dispositivos.
   image:
     src: /favicon.svg
-    alt: Directo
+    alt: Murmur
   actions:
     - theme: brand
-      text: Qué es Directo
+      text: Qué es Murmur
       link: /guide/overview
     - theme: alt
       text: Arquitectura
       link: /guide/architecture
     - theme: alt
       text: Ver el código en GitHub
-      link: https://github.com/fsoftt/Directo
+      link: https://github.com/fsoftt/Murmur
 
 features:
   - icon: 📱
@@ -74,7 +74,7 @@ El servidor solo les ayuda a **encontrarse**. Los mensajes van de teléfono a te
 los dos extremos pueden leerlos.
 
 ::: warning Estado: pre-alfa y sin auditar
-No uses Directo para comunicaciones sensibles hasta que exista una auditoría de seguridad
+No uses Murmur para comunicaciones sensibles hasta que exista una auditoría de seguridad
 independiente. Consulta [Privacidad y amenazas](/guide/privacy).
 :::
 

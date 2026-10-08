@@ -5,7 +5,7 @@
 ## Contexto
 La arquitectura inicial proponía Double Ratchet. Double Ratchet resuelve la mensajería
 **asíncrona**: cifrar para alguien offline y descifrar mensajes que llegan desordenados o mucho
-después, a través de un buzón. Directo, por diseño (ADR-001), solo entrega cuando ambos están
+después, a través de un buzón. Murmur, por diseño (ADR-001), solo entrega cuando ambos están
 conectados en una sesión fiable y ordenada.
 
 ## Decisión

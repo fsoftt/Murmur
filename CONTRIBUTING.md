@@ -1,4 +1,4 @@
-# Contribuir a Directo
+# Contribuir a Murmur
 
 ## Origen de las contribuciones (DCO)
 
@@ -7,8 +7,8 @@ Cada commit debe incluir `Signed-off-by: Nombre <email>` (`git commit -s`), cert
 
 ## Reglas no negociables
 
-1. **No implementar primitivas criptográficas.** Usa `Directo.Security.Primitives`. Cualquier
-   cambio en `Directo.Security` o en el protocolo necesita revisión explícita y, si cambia el
+1. **No implementar primitivas criptográficas.** Usa `Murmur.Security.Primitives`. Cualquier
+   cambio en `Murmur.Security` o en el protocolo necesita revisión explícita y, si cambia el
    formato de cable, actualizar `docs/protocol/spec.md` y los vectores de prueba.
 2. **Nunca registrar** texto de mensajes, claves, tokens, invitaciones, temas de encuentro ni IPs.
    Usa `LoggerMessage` con categorías de error, no con datos.
@@ -24,7 +24,7 @@ Cada commit debe incluir `Signed-off-by: Nombre <email>` (`git commit -s`), cert
 - Clean Architecture: el dominio no depende de infraestructura; las dependencias apuntan hacia él.
 - MVVM: las vistas no hacen SQL, criptografía ni red; los ViewModels no conocen el transporte.
 - Clases con una sola responsabilidad, interfaces pequeñas, nombres que expresan intención
-  (`MarkDeliveredAsync`, no `Process`). Errores de dominio tipados (`DirectoErrorCode`).
+  (`MarkDeliveredAsync`, no `Process`). Errores de dominio tipados (`MurmurErrorCode`).
 - Estado explícito con máquinas de estados, no combinaciones de booleanos.
 - Operaciones idempotentes y transaccionales; nada crítico solo en memoria.
 - `dotnet format` debe pasar; los avisos son errores en las librerías.
@@ -33,8 +33,8 @@ Cada commit debe incluir `Signed-off-by: Nombre <email>` (`git commit -s`), cert
 
 - Toda corrección de bug llega con un test que falla sin ella.
 - Lógica de dominio y protocolo: tests unitarios. Repositorios: SQLCipher real.
-- Escenarios entre dispositivos: `tests/Directo.IntegrationTests` (servidor real + dos clientes completos).
-- Ejecuta `dotnet test Directo.slnx` antes de abrir un PR.
+- Escenarios entre dispositivos: `tests/Murmur.IntegrationTests` (servidor real + dos clientes completos).
+- Ejecuta `dotnet test Murmur.slnx` antes de abrir un PR.
 
 ## Decisiones
 

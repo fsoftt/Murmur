@@ -1,5 +1,5 @@
 {
-  "name": "directo-site",
+  "name": "murmur-site",
   "scripts": {
     "dev": "vitepress dev",
     "build": "vitepress build",

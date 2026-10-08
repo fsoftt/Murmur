@@ -15,14 +15,14 @@ especificación y no una variante propia.
 ```mermaid
 flowchart LR
     K["Claves fijas<br/>(estáticas y efímeras)"] --> PY["noiseprotocol<br/>(Python, independiente)"]
-    K --> CS["Directo.Security<br/>(C#)"]
+    K --> CS["Murmur.Security<br/>(C#)"]
     PY --> V1[mensajes del handshake,<br/>hash, transporte]
     CS --> V2[mensajes del handshake,<br/>hash, transporte]
     V1 --> EQ{¿Idénticos<br/>byte a byte?}
     V2 --> EQ
 ```
 
-Los vectores de Directo cubren **Noise_KK** y **Noise_IK**: los dos mensajes del handshake, el hash
+Los vectores de Murmur cubren **Noise_KK** y **Noise_IK**: los dos mensajes del handshake, el hash
 del handshake y tres mensajes de transporte en ambas direcciones. El script que los generó está en
 el repositorio, para que cualquiera pueda reproducirlos.
 
@@ -32,6 +32,6 @@ el repositorio, para que cualquiera pueda reproducirlos.
 - Fuzzing de los parsers.
 - Y, antes de cualquier uso real, **una auditoría independiente**.
 
-**En el código:** [`NoiseVectorTests.cs`](https://github.com/fsoftt/Directo/blob/main/tests/Directo.Security.Tests/NoiseVectorTests.cs) ·
-[`noise-vectors.json`](https://github.com/fsoftt/Directo/blob/main/tests/Directo.Security.Tests/TestVectors/noise-vectors.json) ·
-[`generate_noise_vectors.py`](https://github.com/fsoftt/Directo/blob/main/tests/Directo.Security.Tests/TestVectors/generate_noise_vectors.py)
+**En el código:** [`NoiseVectorTests.cs`](https://github.com/fsoftt/Murmur/blob/main/tests/Murmur.Security.Tests/NoiseVectorTests.cs) ·
+[`noise-vectors.json`](https://github.com/fsoftt/Murmur/blob/main/tests/Murmur.Security.Tests/TestVectors/noise-vectors.json) ·
+[`generate_noise_vectors.py`](https://github.com/fsoftt/Murmur/blob/main/tests/Murmur.Security.Tests/TestVectors/generate_noise_vectors.py)

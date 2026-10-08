@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="website/public/favicon.svg" width="72" alt="Logo de Directo">
+  <img src="website/public/favicon.svg" width="72" alt="Logo de Murmur">
 </p>
 
-<h1 align="center">Directo</h1>
+<h1 align="center">Murmur</h1>
 
 <p align="center">
   <b>Mensajería privada, local-first, cifrada de extremo a extremo y peer-to-peer.</b><br>
@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://fsoftt.github.io/Directo/"><b>📖 Sitio del proyecto</b></a> ·
+  <a href="https://fsoftt.github.io/Murmur/"><b>📖 Sitio del proyecto</b></a> ·
   <a href="docs/architecture.md">Arquitectura</a> ·
   <a href="docs/protocol/spec.md">Protocolo</a> ·
   <a href="docs/threat-model.md">Modelo de amenazas</a> ·
@@ -19,15 +19,15 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/fsoftt/Directo/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/fsoftt/Directo/actions/workflows/ci.yml/badge.svg"></a>
-  <a href="https://fsoftt.github.io/Directo/"><img alt="Docs" src="https://img.shields.io/badge/docs-fsoftt.github.io%2FDirecto-1f6feb"></a>
+  <a href="https://github.com/fsoftt/Murmur/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/fsoftt/Murmur/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://fsoftt.github.io/Murmur/"><img alt="Docs" src="https://img.shields.io/badge/docs-fsoftt.github.io%2FMurmur-1f6feb"></a>
   <img alt=".NET 10" src="https://img.shields.io/badge/.NET-10-512BD4">
   <img alt=".NET MAUI" src="https://img.shields.io/badge/app-.NET%20MAUI%20Android-3DDC84">
   <a href="LICENSE"><img alt="Licencia AGPL-3.0" src="https://img.shields.io/badge/licencia-AGPL--3.0-blue"></a>
 </p>
 
 > [!WARNING]
-> **Pre-alfa y sin auditar.** No uses Directo para comunicaciones sensibles hasta que exista una
+> **Pre-alfa y sin auditar.** No uses Murmur para comunicaciones sensibles hasta que exista una
 > auditoría de seguridad independiente. Consulta el [modelo de amenazas](docs/threat-model.md).
 
 ---
@@ -52,7 +52,7 @@
 
 ## Qué es
 
-Directo es una aplicación de mensajería con tres propiedades que normalmente no van juntas:
+Murmur es una aplicación de mensajería con tres propiedades que normalmente no van juntas:
 
 1. **Local-first.** Tus conversaciones viven en tus dispositivos, en una base de datos cifrada. No hay copia en ningún servidor.
 2. **Cifrado de extremo a extremo.** Solo los dos teléfonos de la conversación pueden leer los mensajes.
@@ -61,7 +61,7 @@ Directo es una aplicación de mensajería con tres propiedades que normalmente n
 > **Principio rector:** si una funcionalidad puede hacerse de forma segura en el dispositivo,
 > necesita una buena razón para ir al servidor.
 
-| Mensajería habitual | Directo |
+| Mensajería habitual | Murmur |
 |---|---|
 | Te registras con tu número o email | Tu identidad es un par de claves generado en tu teléfono |
 | El servidor guarda los mensajes hasta que los recibes | No hay buzón: el mensaje espera **en tu teléfono** |
@@ -155,16 +155,16 @@ conoce SQLite, Noise, WebSockets ni MAUI.
 
 ```mermaid
 flowchart TB
-    App["Directo.App<br/>Vistas MAUI"] --> Presentation["Directo.Presentation<br/>ViewModels"]
-    Presentation --> Client["Directo.Client<br/>raíz de composición"]
-    Client --> Networking["Directo.Networking<br/>signaling · P2P · Noise · emparejamiento"]
-    Client --> Storage["Directo.Storage<br/>SQLCipher · migraciones"]
-    Networking --> Domain["Directo.Domain<br/>entidades · casos de uso · outbox · estados"]
+    App["Murmur.App<br/>Vistas MAUI"] --> Presentation["Murmur.Presentation<br/>ViewModels"]
+    Presentation --> Client["Murmur.Client<br/>raíz de composición"]
+    Client --> Networking["Murmur.Networking<br/>signaling · P2P · Noise · emparejamiento"]
+    Client --> Storage["Murmur.Storage<br/>SQLCipher · migraciones"]
+    Networking --> Domain["Murmur.Domain<br/>entidades · casos de uso · outbox · estados"]
     Storage --> Domain
-    Networking --> Security["Directo.Security<br/>Noise · identidad · invitaciones"]
-    Security --> Protocol["Directo.Protocol<br/>CBOR · JSON · límites"]
+    Networking --> Security["Murmur.Security<br/>Noise · identidad · invitaciones"]
+    Security --> Protocol["Murmur.Protocol<br/>CBOR · JSON · límites"]
     Networking --> Protocol
-    Server["Directo.Signaling.Server<br/>ASP.NET Core"] --> Protocol
+    Server["Murmur.Signaling.Server<br/>ASP.NET Core"] --> Protocol
 ```
 
 El transporte entre teléfonos es intercambiable (`IPeerLink`: fiable, ordenado, por mensajes). La
@@ -178,32 +178,32 @@ confidencialidad la pone Noise por encima, así que ningún transporte necesita 
 | `UnavailablePeerLinkFactory` | Release hasta la fase 4 |
 
 Más detalle en [`docs/architecture.md`](docs/architecture.md) y en el
-[sitio](https://fsoftt.github.io/Directo/guide/architecture).
+[sitio](https://fsoftt.github.io/Murmur/guide/architecture).
 
 ## Técnicas y dónde están en el código
 
 | Técnica | Para qué | Dónde |
 |---|---|---|
-| **Noise_KK / Noise_IK** (25519, ChaChaPoly, SHA-256) | Autenticación mutua y claves nuevas por conexión (*forward secrecy*) | [`Security/Noise`](src/Directo.Security/Noise) · [`SecureHandshake.cs`](src/Directo.Networking/Secure/SecureHandshake.cs) |
-| **Vectores de prueba independientes** | Nuestro Noise produce los mismos bytes que `noiseprotocol` (Python) | [`NoiseVectorTests.cs`](tests/Directo.Security.Tests/NoiseVectorTests.cs) |
-| **Ed25519 / X25519** | Firmar tarjetas e invitaciones; acordar secretos | [`Curve25519.cs`](src/Directo.Security/Primitives/Curve25519.cs) · [`LocalIdentityKeys.cs`](src/Directo.Security/Identity/LocalIdentityKeys.cs) |
-| **ChaCha20-Poly1305** con nonces de contador | Cifrado autenticado; detecta manipulación, replay y reordenamiento | [`ChaChaPoly.cs`](src/Directo.Security/Primitives/ChaChaPoly.cs) · [`CipherState.cs`](src/Directo.Security/Noise/CipherState.cs) |
-| **HKDF** y temas de encuentro rotativos | Presencia sin revelar identidades | [`Rendezvous.cs`](src/Directo.Security/Identity/Rendezvous.cs) |
-| **Invitaciones firmadas de un solo uso** | Emparejamiento por QR sin secretos en el código | [`InviteService.cs`](src/Directo.Security/Identity/InviteService.cs) · [`PairingService.cs`](src/Directo.Networking/Pairing/PairingService.cs) |
-| **Código de seguridad** (estilo Signal) | Detectar a un impostor | [`SafetyNumber.cs`](src/Directo.Security/Identity/SafetyNumber.cs) |
-| **CBOR estricto** con límites previos | Formato de cable compacto, evolutivo y resistente a entradas hostiles | [`Protocol/Frames`](src/Directo.Protocol/Frames) · [`CborMap.cs`](src/Directo.Protocol/Serialization/CborMap.cs) |
-| **Outbox transaccional** | Ningún mensaje se pierde aunque la app muera | [`SendMessage.cs`](src/Directo.Domain/UseCases/SendMessage.cs) |
-| **ACK tras persistir + recepción idempotente** | Ni pérdidas ni duplicados | [`ConversationSyncSession.cs`](src/Directo.Domain/Delivery/ConversationSyncSession.cs) · [`SqliteMessageRepository.cs`](src/Directo.Storage/Repositories/SqliteMessageRepository.cs) |
-| **Backoff exponencial con jitter** | Reintentos sin saturar | [`Backoff.cs`](src/Directo.Domain/Common/Backoff.cs) |
-| **Relojes de Lamport** | Mismo orden en ambos teléfonos, inmune al desfase de relojes | [`MessageRules.cs`](src/Directo.Domain/Model/MessageRules.cs) |
-| **Máquina de estados explícita** | Ciclo de vida de la conexión sin estados imposibles | [`PeerConnectionStateMachine.cs`](src/Directo.Domain/Connections/PeerConnectionStateMachine.cs) |
-| **Token bucket y contrapresión** | Frenar a un emisor rápido sin perder mensajes | [`TokenBucket.cs`](src/Directo.Domain/Common/TokenBucket.cs) |
-| **SQLCipher + Keystore** | Base cifrada; la clave nunca está junto al fichero | [`SqliteDatabase.cs`](src/Directo.Storage/Database/SqliteDatabase.cs) · [`MauiSecretStore.cs`](src/Directo.App/Services/MauiSecretStore.cs) |
-| **Migraciones versionadas** | Evolucionar el esquema sin perder datos | [`Migrations.cs`](src/Directo.Storage/Database/Migrations.cs) |
-| **Límites anti-abuso** en el servidor | Temas, miembros, conexiones por IP, ritmo, colas acotadas | [`SignalingSession.cs`](src/Directo.Signaling.Server/SignalingSession.cs) |
-| **Clean Architecture + MVVM** | Dominio sin dependencias; ViewModels testeables en cualquier SO | [`Directo.Domain`](src/Directo.Domain) · [`Directo.Presentation`](src/Directo.Presentation) |
+| **Noise_KK / Noise_IK** (25519, ChaChaPoly, SHA-256) | Autenticación mutua y claves nuevas por conexión (*forward secrecy*) | [`Security/Noise`](src/Murmur.Security/Noise) · [`SecureHandshake.cs`](src/Murmur.Networking/Secure/SecureHandshake.cs) |
+| **Vectores de prueba independientes** | Nuestro Noise produce los mismos bytes que `noiseprotocol` (Python) | [`NoiseVectorTests.cs`](tests/Murmur.Security.Tests/NoiseVectorTests.cs) |
+| **Ed25519 / X25519** | Firmar tarjetas e invitaciones; acordar secretos | [`Curve25519.cs`](src/Murmur.Security/Primitives/Curve25519.cs) · [`LocalIdentityKeys.cs`](src/Murmur.Security/Identity/LocalIdentityKeys.cs) |
+| **ChaCha20-Poly1305** con nonces de contador | Cifrado autenticado; detecta manipulación, replay y reordenamiento | [`ChaChaPoly.cs`](src/Murmur.Security/Primitives/ChaChaPoly.cs) · [`CipherState.cs`](src/Murmur.Security/Noise/CipherState.cs) |
+| **HKDF** y temas de encuentro rotativos | Presencia sin revelar identidades | [`Rendezvous.cs`](src/Murmur.Security/Identity/Rendezvous.cs) |
+| **Invitaciones firmadas de un solo uso** | Emparejamiento por QR sin secretos en el código | [`InviteService.cs`](src/Murmur.Security/Identity/InviteService.cs) · [`PairingService.cs`](src/Murmur.Networking/Pairing/PairingService.cs) |
+| **Código de seguridad** (estilo Signal) | Detectar a un impostor | [`SafetyNumber.cs`](src/Murmur.Security/Identity/SafetyNumber.cs) |
+| **CBOR estricto** con límites previos | Formato de cable compacto, evolutivo y resistente a entradas hostiles | [`Protocol/Frames`](src/Murmur.Protocol/Frames) · [`CborMap.cs`](src/Murmur.Protocol/Serialization/CborMap.cs) |
+| **Outbox transaccional** | Ningún mensaje se pierde aunque la app muera | [`SendMessage.cs`](src/Murmur.Domain/UseCases/SendMessage.cs) |
+| **ACK tras persistir + recepción idempotente** | Ni pérdidas ni duplicados | [`ConversationSyncSession.cs`](src/Murmur.Domain/Delivery/ConversationSyncSession.cs) · [`SqliteMessageRepository.cs`](src/Murmur.Storage/Repositories/SqliteMessageRepository.cs) |
+| **Backoff exponencial con jitter** | Reintentos sin saturar | [`Backoff.cs`](src/Murmur.Domain/Common/Backoff.cs) |
+| **Relojes de Lamport** | Mismo orden en ambos teléfonos, inmune al desfase de relojes | [`MessageRules.cs`](src/Murmur.Domain/Model/MessageRules.cs) |
+| **Máquina de estados explícita** | Ciclo de vida de la conexión sin estados imposibles | [`PeerConnectionStateMachine.cs`](src/Murmur.Domain/Connections/PeerConnectionStateMachine.cs) |
+| **Token bucket y contrapresión** | Frenar a un emisor rápido sin perder mensajes | [`TokenBucket.cs`](src/Murmur.Domain/Common/TokenBucket.cs) |
+| **SQLCipher + Keystore** | Base cifrada; la clave nunca está junto al fichero | [`SqliteDatabase.cs`](src/Murmur.Storage/Database/SqliteDatabase.cs) · [`MauiSecretStore.cs`](src/Murmur.App/Services/MauiSecretStore.cs) |
+| **Migraciones versionadas** | Evolucionar el esquema sin perder datos | [`Migrations.cs`](src/Murmur.Storage/Database/Migrations.cs) |
+| **Límites anti-abuso** en el servidor | Temas, miembros, conexiones por IP, ritmo, colas acotadas | [`SignalingSession.cs`](src/Murmur.Signaling.Server/SignalingSession.cs) |
+| **Clean Architecture + MVVM** | Dominio sin dependencias; ViewModels testeables en cualquier SO | [`Murmur.Domain`](src/Murmur.Domain) · [`Murmur.Presentation`](src/Murmur.Presentation) |
 
-Cada técnica tiene una página explicativa en [el sitio](https://fsoftt.github.io/Directo/concepts/).
+Cada técnica tiene una página explicativa en [el sitio](https://fsoftt.github.io/Murmur/concepts/).
 
 ## Seguridad y privacidad
 
@@ -226,10 +226,10 @@ Cada técnica tiene una página explicativa en [el sitio](https://fsoftt.github.
 
 | Proyecto | Cubre |
 |---|---|
-| `Directo.Protocol.Tests` | Formatos de cable, compatibilidad hacia delante, límites, **fuzzing** (20 000 entradas) |
-| `Directo.Security.Tests` | **Vectores Noise independientes**, manipulación, replay, invitaciones, código de seguridad, temas |
-| `Directo.Core.Tests` | SQLCipher real (sin texto plano en disco), repositorios, Lamport, máquina de estados, entrega con fallos inyectados |
-| `Directo.IntegrationTests` | **Servidor real en proceso + dos dispositivos completos**: emparejamiento, offline, emisor offline, caídas de red, peer inalcanzable, bloqueo, reinicios, el servidor no ve contenido, ViewModels |
+| `Murmur.Protocol.Tests` | Formatos de cable, compatibilidad hacia delante, límites, **fuzzing** (20 000 entradas) |
+| `Murmur.Security.Tests` | **Vectores Noise independientes**, manipulación, replay, invitaciones, código de seguridad, temas |
+| `Murmur.Core.Tests` | SQLCipher real (sin texto plano en disco), repositorios, Lamport, máquina de estados, entrega con fallos inyectados |
+| `Murmur.IntegrationTests` | **Servidor real en proceso + dos dispositivos completos**: emparejamiento, offline, emisor offline, caídas de red, peer inalcanzable, bloqueo, reinicios, el servidor no ve contenido, ViewModels |
 
 La CI de GitHub Actions ejecuta formato, compilación Release con avisos como errores, pruebas con
 cobertura, comprobación de dependencias vulnerables, compilación Android con APK de depuración,
@@ -241,16 +241,16 @@ Requisitos: [.NET SDK 10](https://dotnet.microsoft.com/download). Para la app: `
 
 ```bash
 # Pruebas (la solución no incluye la app MAUI, compila en cualquier SO)
-dotnet test Directo.slnx
+dotnet test Murmur.slnx
 
 # Servidor de signaling
-dotnet run --project src/Directo.Signaling.Server --urls http://0.0.0.0:8080
+dotnet run --project src/Murmur.Signaling.Server --urls http://0.0.0.0:8080
 # o
-docker build -f src/Directo.Signaling.Server/Dockerfile -t directo-signaling .
-docker run -p 8080:8080 directo-signaling
+docker build -f src/Murmur.Signaling.Server/Dockerfile -t murmur-signaling .
+docker run -p 8080:8080 murmur-signaling
 
 # App Android (Debug: incluye el transporte de desarrollo)
-dotnet build src/Directo.App -f net10.0-android -t:Run
+dotnet build src/Murmur.App -f net10.0-android -t:Run
 ```
 
 El emulador de Android apunta por defecto a `ws://10.0.2.2:8080/ws`; en teléfonos reales cambia el
@@ -263,15 +263,15 @@ Sitio de documentación en local: `cd website && npm ci && npm run dev`.
 
 ```text
 src/
-  Directo.Domain/            Entidades, casos de uso, entrega, máquina de estados, puertos
-  Directo.Protocol/          CBOR, JSON de signaling, límites
-  Directo.Security/          Noise, identidad, invitaciones, código de seguridad, temas
-  Directo.Storage/           SQLCipher, migraciones, repositorios
-  Directo.Networking/        Cliente de signaling, transportes, sesión Noise, conexiones, emparejamiento
-  Directo.Client/            DirectoClient (raíz de composición)
-  Directo.Presentation/      ViewModels MVVM
-  Directo.App/               App .NET MAUI (Android)
-  Directo.Signaling.Server/  Servidor ASP.NET Core
+  Murmur.Domain/            Entidades, casos de uso, entrega, máquina de estados, puertos
+  Murmur.Protocol/          CBOR, JSON de signaling, límites
+  Murmur.Security/          Noise, identidad, invitaciones, código de seguridad, temas
+  Murmur.Storage/           SQLCipher, migraciones, repositorios
+  Murmur.Networking/        Cliente de signaling, transportes, sesión Noise, conexiones, emparejamiento
+  Murmur.Client/            MurmurClient (raíz de composición)
+  Murmur.Presentation/      ViewModels MVVM
+  Murmur.App/               App .NET MAUI (Android)
+  Murmur.Signaling.Server/  Servidor ASP.NET Core
 tests/                       Unitarios, vectores, integración
 docs/                        Arquitectura, protocolo, amenazas, ADRs, documento original
 website/                     Sitio VitePress publicado en GitHub Pages

@@ -1,6 +1,6 @@
-# Qué es Directo
+# Qué es Murmur
 
-**Directo** es una aplicación de mensajería privada con tres propiedades que normalmente no van juntas:
+**Murmur** es una aplicación de mensajería privada con tres propiedades que normalmente no van juntas:
 
 1. **Local-first.** Tus conversaciones viven en tus dispositivos, no en la nube de nadie.
 2. **Cifrado de extremo a extremo.** Solo los dos teléfonos de la conversación pueden leer los mensajes.
@@ -11,7 +11,7 @@
 
 ## Qué hace distinto
 
-| Mensajería habitual | Directo |
+| Mensajería habitual | Murmur |
 |---|---|
 | Te registras con tu número o email | Tu identidad es un par de claves generado en tu teléfono |
 | El servidor guarda los mensajes hasta que los recibes | No hay buzón: el mensaje espera **en tu teléfono** |
@@ -46,7 +46,7 @@ tener buzón en el servidor ([ADR-001](/guide/decisions#adr-001)).
 El transporte WebRTC real es la [siguiente fase](/guide/roadmap). Mientras tanto, las compilaciones
 Debug incluyen un transporte solo de desarrollo para probar en teléfonos reales.
 
-## Lo que Directo no es (todavía)
+## Lo que Murmur no es (todavía)
 
 Grupos, llamadas, adjuntos, multi-dispositivo, backups y versión web quedan fuera del MVP a propósito.
 Primero, que el núcleo funcione bien.
