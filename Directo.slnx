@@ -1,12 +1,16 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/Directo.Client/Directo.Client.csproj" />
     <Project Path="src/Directo.Domain/Directo.Domain.csproj" />
+    <Project Path="src/Directo.Networking/Directo.Networking.csproj" />
     <Project Path="src/Directo.Protocol/Directo.Protocol.csproj" />
     <Project Path="src/Directo.Security/Directo.Security.csproj" />
+    <Project Path="src/Directo.Signaling.Server/Directo.Signaling.Server.csproj" />
     <Project Path="src/Directo.Storage/Directo.Storage.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Directo.Core.Tests/Directo.Core.Tests.csproj" />
+    <Project Path="tests/Directo.IntegrationTests/Directo.IntegrationTests.csproj" />
     <Project Path="tests/Directo.Protocol.Tests/Directo.Protocol.Tests.csproj" />
     <Project Path="tests/Directo.Security.Tests/Directo.Security.Tests.csproj" />
   </Folder>

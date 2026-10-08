@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Directo.Client\Directo.Client.csproj" />
+    <ProjectReference Include="..\..\src\Directo.Signaling.Server\Directo.Signaling.Server.csproj" />
+  </ItemGroup>
+</Project>
