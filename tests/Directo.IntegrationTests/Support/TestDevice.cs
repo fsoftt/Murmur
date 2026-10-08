@@ -19,12 +19,12 @@ public sealed class TestDevice : IAsyncDisposable
     };
 
     private readonly SignalingServerFixture _server;
-    private readonly InMemoryPeerLinkNetwork _network;
+    private readonly IPeerLinkFactory _network;
     private readonly InMemorySecretStore _secrets = new();
     private readonly string _databasePath = Path.Combine(Path.GetTempPath(), $"directo-it-{Guid.NewGuid():N}.db");
     private readonly string _profileName;
 
-    private TestDevice(string profileName, SignalingServerFixture server, InMemoryPeerLinkNetwork network)
+    private TestDevice(string profileName, SignalingServerFixture server, IPeerLinkFactory network)
     {
         _profileName = profileName;
         _server = server;
@@ -35,7 +35,7 @@ public sealed class TestDevice : IAsyncDisposable
 
     public bool IsRunning { get; private set; }
 
-    public static async Task<TestDevice> StartAsync(string profileName, SignalingServerFixture server, InMemoryPeerLinkNetwork network)
+    public static async Task<TestDevice> StartAsync(string profileName, SignalingServerFixture server, IPeerLinkFactory network)
     {
         var device = new TestDevice(profileName, server, network);
         await device.StartAsync();

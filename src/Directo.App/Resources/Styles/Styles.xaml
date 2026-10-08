@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+    <Style TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+        <Setter Property="TextColor" Value="White" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Padding" Value="14,10" />
+    </Style>
+    <Style x:Key="DangerButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{StaticResource Danger}" />
+        <Setter Property="TextColor" Value="White" />
+        <Setter Property="CornerRadius" Value="8" />
+    </Style>
+    <Style x:Key="Heading" TargetType="Label">
+        <Setter Property="FontSize" Value="17" />
+        <Setter Property="FontAttributes" Value="Bold" />
+    </Style>
+    <Style x:Key="Muted" TargetType="Label">
+        <Setter Property="TextColor" Value="{StaticResource MutedText}" />
+    </Style>
+    <Style x:Key="Caption" TargetType="Label">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="TextColor" Value="{StaticResource MutedText}" />
+    </Style>
+    <Style x:Key="Error" TargetType="Label">
+        <Setter Property="TextColor" Value="{StaticResource Danger}" />
+    </Style>
+    <Style x:Key="Banner" TargetType="Label">
+        <Setter Property="BackgroundColor" Value="{StaticResource BannerBackground}" />
+        <Setter Property="TextColor" Value="Black" />
+        <Setter Property="Padding" Value="16,10" />
+    </Style>
+    <Style x:Key="Bubble" TargetType="Border">
+        <Setter Property="Padding" Value="12,8" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="MaximumWidthRequest" Value="320" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+    </Style>
+</ResourceDictionary>

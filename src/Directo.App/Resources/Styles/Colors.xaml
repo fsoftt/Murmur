@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+    <Color x:Key="Primary">#1F6FEB</Color>
+    <Color x:Key="Danger">#CF222E</Color>
+    <Color x:Key="MutedText">#6E7781</Color>
+    <Color x:Key="BannerBackground">#FFF8C5</Color>
+    <Color x:Key="OutgoingBubble">#DDF4FF</Color>
+    <Color x:Key="IncomingBubble">#F6F8FA</Color>
+</ResourceDictionary>

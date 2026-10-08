@@ -1,6 +1,6 @@
 using System.Formats.Cbor;
-using Directo.Protocol.Serialization;
 using Directo.Protocol.Identity;
+using Directo.Protocol.Serialization;
 
 namespace Directo.Protocol.Frames;
 

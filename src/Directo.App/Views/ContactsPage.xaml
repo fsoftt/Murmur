@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Directo.Presentation.ViewModels;assembly=Directo.Presentation"
+             x:Class="Directo.App.Views.ContactsPage"
+             x:DataType="vm:ContactsViewModel"
+             Title="Directo">
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Ajustes" Clicked="OnSettingsClicked" />
+    </ContentPage.ToolbarItems>
+    <Grid RowDefinitions="Auto,*,Auto">
+        <Label Text="{Binding Banner}"
+               IsVisible="{Binding Banner, Converter={StaticResource IsNotNull}}"
+               Style="{StaticResource Banner}" />
+
+        <CollectionView x:Name="List"
+                        Grid.Row="1"
+                        ItemsSource="{Binding Conversations}"
+                        SelectionMode="Single"
+                        SelectionChanged="OnSelectionChanged">
+            <CollectionView.EmptyView>
+                <VerticalStackLayout Padding="32" Spacing="12" VerticalOptions="Center">
+                    <Label Text="Aún no tienes contactos." Style="{StaticResource Heading}" />
+                    <Label Text="Directo no usa tu número ni tu email. Para añadir a alguien, reuníos y uno escanea el código QR del otro." />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="vm:ConversationListItem">
+                    <Grid Padding="16,12" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="2">
+                        <Label Text="{Binding DisplayName}" Style="{StaticResource Heading}" />
+                        <Label Grid.Column="1"
+                               Text="{Binding PendingCount, StringFormat='🕒 {0}'}"
+                               IsVisible="{Binding HasPending}"
+                               SemanticProperties.Description="Mensajes pendientes en este dispositivo" />
+                        <Label Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding Preview}" LineBreakMode="TailTruncation" Style="{StaticResource Muted}" />
+                        <Label Grid.Row="2" Grid.ColumnSpan="2" Text="{Binding ConnectionStatus}" Style="{StaticResource Caption}" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Grid Grid.Row="2" Padding="16" ColumnDefinitions="*,*" ColumnSpacing="12">
+            <Button Text="Mostrar mi QR" Command="{Binding InviteCommand}" />
+            <Button Grid.Column="1" Text="Escanear QR" Command="{Binding ScanCommand}" />
+        </Grid>
+    </Grid>
+</ContentPage>

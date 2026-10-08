@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Directo.Presentation.ViewModels;assembly=Directo.Presentation"
+             x:Class="Directo.App.Views.InvitePage"
+             x:DataType="vm:InviteViewModel"
+             Title="Mi código QR">
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="16">
+            <Image x:Name="QrImage" HeightRequest="280" WidthRequest="280" HorizontalOptions="Center"
+                   SemanticProperties.Description="Código QR de invitación" />
+            <Label Text="{Binding Status}" HorizontalTextAlignment="Center" />
+            <Label Text="{Binding ExpiresAt, StringFormat='Caduca a las {0:t}'}" Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
+            <Label Text="El código solo contiene tu clave pública y un token de un solo uso. Muéstralo únicamente a la persona que quieres añadir."
+                   Style="{StaticResource Muted}" />
+            <Label Text="{Binding ErrorMessage}" IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNull}}" Style="{StaticResource Error}" />
+            <Button x:Name="CopyButton" Text="Copiar invitación (solo desarrollo)" Clicked="OnCopyClicked" IsVisible="False" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
