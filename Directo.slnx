@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Directo.Protocol/Directo.Protocol.csproj" />
+    <Project Path="src/Directo.Security/Directo.Security.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Directo.Protocol.Tests/Directo.Protocol.Tests.csproj" />
+    <Project Path="tests/Directo.Security.Tests/Directo.Security.Tests.csproj" />
+  </Folder>
+</Solution>
