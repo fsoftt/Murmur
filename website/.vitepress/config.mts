@@ -54,15 +54,21 @@ export default defineConfig({
   cleanUrls: true,
   ignoreDeadLinks: 'localhostLinks',
   lastUpdated: true,
+  // Night first: the site opens in dark mode and keeps the appearance toggle.
+  appearance: 'dark',
   // Mermaid is large but loaded lazily, only on pages that contain diagrams.
   vite: { build: { chunkSizeWarningLimit: 3000 } },
   head: [
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/Murmur/favicon.svg' }],
+    ['meta', { name: 'theme-color', content: '#0F1211' }],
+    ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
+    ['link', { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' }],
     ['meta', { property: 'og:title', content: 'Murmur: private peer-to-peer messaging' }],
     ['meta', { property: 'og:description', content: 'No accounts, no servers that keep messages. Noise, SQLCipher, QR and .NET MAUI.' }],
   ],
 
   markdown: {
+    theme: { light: 'vitesse-light', dark: 'vitesse-dark' },
     // ```mermaid fences are rendered in the browser by the <Mermaid> component.
     config(md) {
       const fence = md.renderer.rules.fence!
