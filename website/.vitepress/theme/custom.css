@@ -1,24 +1,476 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700&display=swap');
+
+/*
+ * Murmur — "a whisper at night".
+ * Graphite and quiet sage after dark, paper and ink by day.
+ */
+
 :root {
-  --vp-c-brand-1: #1f6feb;
-  --vp-c-brand-2: #388bfd;
-  --vp-c-brand-3: #1158c7;
-  --vp-home-hero-name-color: transparent;
-  --vp-home-hero-name-background: linear-gradient(120deg, #1f6feb 20%, #14b8a6);
-  --vp-home-hero-image-background-image: linear-gradient(-45deg, #1f6feb55 50%, #14b8a655 50%);
-  --vp-home-hero-image-filter: blur(56px);
+  --mm-font-display: 'Instrument Serif', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --vp-font-family-base: 'Manrope', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --vp-font-family-mono: 'Geist Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+
+  /* light: paper and ink */
+  --vp-c-bg: #F2F1EC;
+  --vp-c-bg-alt: #F8F7F3;
+  --vp-c-bg-soft: #F8F7F3;
+  --vp-c-bg-elv: #FFFFFF;
+  --mm-surface-1: #F8F7F3;
+  --mm-surface-2: #FFFFFF;
+
+  --vp-c-divider: #DCDDD6;
+  --vp-c-border: #CDCFC6;
+  --vp-c-gutter: #DCDDD6;
+  --mm-line-strong: #B9BCB3;
+
+  --vp-c-text-1: #141816;
+  --vp-c-text-2: #545D58;
+  --vp-c-text-3: #6B736E;
+
+  --mm-accent: #5E8C74;
+  --mm-accent-text: #3D6B55;
+  --mm-glow: rgba(94, 140, 116, 0.16);
+  --mm-grid: rgba(20, 24, 22, 0.07);
+
+  --vp-c-brand-1: #3D6B55;
+  --vp-c-brand-2: #345E4A;
+  --vp-c-brand-3: #3D6B55;
+  --vp-c-brand-soft: rgba(61, 107, 85, 0.12);
+
+  --vp-c-default-1: #CDCFC6;
+  --vp-c-default-2: #DCDDD6;
+  --vp-c-default-3: #E6E6E0;
+  --vp-c-default-soft: rgba(84, 93, 88, 0.1);
+
+  --vp-c-tip-1: var(--vp-c-brand-1);
+  --vp-c-tip-2: var(--vp-c-brand-2);
+  --vp-c-tip-3: var(--vp-c-brand-3);
+  --vp-c-tip-soft: var(--vp-c-brand-soft);
+  --vp-c-note-1: var(--vp-c-text-2);
+  --vp-c-note-soft: var(--vp-c-default-soft);
+  --vp-c-important-1: var(--vp-c-brand-1);
+  --vp-c-important-soft: var(--vp-c-brand-soft);
+  --vp-c-warning-1: #141816;
+  --vp-c-warning-2: #141816;
+  --vp-c-warning-3: #141816;
+  --vp-c-warning-soft: #E8E7E0;
+  --vp-c-danger-1: #6B3F36;
+  --vp-c-danger-2: #6B3F36;
+  --vp-c-danger-3: #6B3F36;
+  --vp-c-danger-soft: #EBE4DF;
+  --vp-c-caution-1: var(--vp-c-danger-1);
+  --vp-c-caution-soft: var(--vp-c-danger-soft);
+
+  --vp-button-brand-bg: #3D6B55;
+  --vp-button-brand-hover-bg: #345E4A;
+  --vp-button-brand-active-bg: #2C503F;
+  --vp-button-brand-text: #FFFFFF;
+  --vp-button-brand-hover-text: #FFFFFF;
+  --vp-button-brand-active-text: #FFFFFF;
+
+  --vp-code-bg: rgba(61, 107, 85, 0.1);
+  --vp-code-color: #2C503F;
+  --vp-code-block-bg: #FFFFFF;
+  --vp-code-copy-code-bg: #F8F7F3;
+  --vp-code-copy-code-hover-bg: #FFFFFF;
+
+  --vp-nav-bg-color: rgba(242, 241, 236, 0.86);
+  --vp-sidebar-bg-color: #F2F1EC;
+  --vp-local-nav-bg-color: rgba(242, 241, 236, 0.9);
+
+  --vp-home-hero-name-color: var(--vp-c-text-1);
 }
 
 .dark {
-  --vp-c-brand-1: #58a6ff;
-  --vp-c-brand-2: #79b8ff;
-  --vp-c-brand-3: #388bfd;
+  /* dark: graphite and sage */
+  --vp-c-bg: #0F1211;
+  --vp-c-bg-alt: #151918;
+  --vp-c-bg-soft: #151918;
+  --vp-c-bg-elv: #1C2120;
+  --mm-surface-1: #151918;
+  --mm-surface-2: #1C2120;
+
+  --vp-c-divider: #2A302E;
+  --vp-c-border: #333A37;
+  --vp-c-gutter: #0B0D0C;
+  --mm-line-strong: #3B4340;
+
+  --vp-c-text-1: #E8ECE9;
+  --vp-c-text-2: #9BA59F;
+  --vp-c-text-3: #7F8A84;
+
+  --mm-accent: #9CC3AC;
+  --mm-accent-text: #9CC3AC;
+  --mm-glow: rgba(94, 140, 116, 0.2);
+  --mm-grid: rgba(232, 236, 233, 0.06);
+
+  --vp-c-brand-1: #9CC3AC;
+  --vp-c-brand-2: #B5D6C2;
+  --vp-c-brand-3: #5E8C74;
+  --vp-c-brand-soft: rgba(156, 195, 172, 0.12);
+
+  --vp-c-default-1: #3B4340;
+  --vp-c-default-2: #2A302E;
+  --vp-c-default-3: #1C2120;
+  --vp-c-default-soft: rgba(155, 165, 159, 0.1);
+
+  --vp-c-warning-1: #E8ECE9;
+  --vp-c-warning-2: #E8ECE9;
+  --vp-c-warning-3: #E8ECE9;
+  --vp-c-warning-soft: #1C2120;
+  --vp-c-danger-1: #D2B4AC;
+  --vp-c-danger-2: #D2B4AC;
+  --vp-c-danger-3: #D2B4AC;
+  --vp-c-danger-soft: #211B1A;
+
+  --vp-button-brand-bg: #9CC3AC;
+  --vp-button-brand-hover-bg: #B5D6C2;
+  --vp-button-brand-active-bg: #B5D6C2;
+  --vp-button-brand-text: #0F1211;
+  --vp-button-brand-hover-text: #0F1211;
+  --vp-button-brand-active-text: #0F1211;
+
+  --vp-code-bg: rgba(156, 195, 172, 0.1);
+  --vp-code-color: #B5D6C2;
+  --vp-code-block-bg: #151918;
+  --vp-code-copy-code-bg: #1C2120;
+  --vp-code-copy-code-hover-bg: #2A302E;
+
+  --vp-nav-bg-color: rgba(15, 18, 17, 0.82);
+  --vp-sidebar-bg-color: #0F1211;
+  --vp-local-nav-bg-color: rgba(15, 18, 17, 0.88);
 }
+
+::selection {
+  background: rgba(94, 140, 116, 0.35);
+}
+
+html {
+  overflow-x: clip;
+}
+
+body {
+  font-feature-settings: 'ss01', 'cv11';
+}
+
+/* ---------- navigation ---------- */
+
+.VPNavBar .title {
+  font-family: var(--mm-font-display);
+  font-size: 1.45rem;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+}
+
+.VPNavBar .title .logo {
+  height: 26px;
+  margin-right: 10px;
+  border-radius: 6px;
+}
+
+.VPNavBar:not(.home.top) .content-body,
+.VPNavBar.has-sidebar .content-body {
+  backdrop-filter: saturate(140%) blur(12px);
+  -webkit-backdrop-filter: saturate(140%) blur(12px);
+}
+
+.VPNavBar .divider-line {
+  background-color: var(--vp-c-divider);
+}
+
+.VPNavBarMenuLink,
+.VPNavBarMenuGroup .button {
+  font-weight: 500 !important;
+}
+
+.VPNavBarMenuLink.active {
+  color: var(--vp-c-brand-1) !important;
+}
+
+.VPNavBarSearch .DocSearch-Button {
+  border: 1px solid var(--vp-c-divider);
+  background: var(--vp-c-bg-soft);
+}
+
+/* ---------- sidebar ---------- */
+
+.VPSidebar {
+  border-right: 1px solid var(--vp-c-divider);
+}
+
+.VPSidebarItem.level-0 > .item > .text,
+.VPSidebarItem.level-0 > .item > h2.text {
+  font-family: var(--vp-font-family-mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--vp-c-text-2);
+}
+
+.VPSidebarItem.level-1 .link {
+  position: relative;
+}
+
+.VPSidebarItem.level-1.is-active > .item .link > .text {
+  color: var(--vp-c-text-1);
+  font-weight: 600;
+}
+
+.VPSidebarItem.level-1.is-active > .item > .indicator {
+  background-color: var(--mm-accent);
+}
+
+/* ---------- doc typography ---------- */
+
+.vp-doc h1,
+.vp-doc h2 {
+  font-family: var(--mm-font-display);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+.vp-doc h1 {
+  font-size: 2.75rem;
+  line-height: 1.08;
+}
+
+.vp-doc h2 {
+  margin-top: 56px;
+  padding-top: 28px;
+  font-size: 2rem;
+  line-height: 1.15;
+}
+
+.vp-doc h3 {
+  font-weight: 650;
+  letter-spacing: -0.005em;
+}
+
+.vp-doc a {
+  color: var(--vp-c-brand-1);
+  text-decoration-color: color-mix(in srgb, var(--vp-c-brand-1) 45%, transparent);
+  text-underline-offset: 3px;
+  font-weight: 500;
+}
+
+.vp-doc a:hover {
+  color: var(--vp-c-text-1);
+  text-decoration-color: currentColor;
+}
+
+.vp-doc blockquote {
+  border-left: 2px solid var(--mm-accent);
+  padding: 4px 0 4px 18px;
+}
+
+.vp-doc blockquote > p {
+  font-family: var(--mm-font-display);
+  font-size: 1.3rem;
+  line-height: 1.45;
+  color: var(--vp-c-text-1);
+}
+
+.vp-doc blockquote strong {
+  font-weight: 400;
+  font-style: italic;
+}
+
+.vp-doc :not(pre) > code {
+  font-size: 0.86em;
+}
+
+@media (max-width: 767px) {
+  .vp-doc h1 { font-size: 2.25rem; }
+  .vp-doc h2 { font-size: 1.75rem; }
+}
+
+/* ---------- tables ---------- */
+
+.vp-doc table {
+  border-collapse: collapse;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 12px;
+}
+
+.vp-doc tr {
+  background-color: transparent;
+  border-top: 1px solid var(--vp-c-divider);
+}
+
+.vp-doc tr:nth-child(2n) {
+  background-color: var(--vp-c-bg-soft);
+}
+
+.vp-doc th,
+.vp-doc td {
+  border: 0;
+  border-top: 1px solid var(--vp-c-divider);
+}
+
+.vp-doc th {
+  background-color: var(--vp-c-bg-soft);
+  font-family: var(--vp-font-family-mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--vp-c-text-2);
+}
+
+/* ---------- code ---------- */
+
+.vp-doc div[class*='language-'] {
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 12px;
+}
+
+.vp-doc div[class*='language-'] > span.lang {
+  font-family: var(--vp-font-family-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--vp-c-text-3);
+}
+
+@media (max-width: 639px) {
+  .vp-doc > div > div[class*='language-'],
+  .vp-doc div[class*='language-'] {
+    border-radius: 0;
+    border-inline: 0;
+  }
+}
+
+/* ---------- custom containers ---------- */
+
+.vp-doc .custom-block {
+  border: 1px solid var(--vp-c-divider);
+  border-left-width: 3px;
+  border-radius: 10px;
+  padding: 14px 20px 6px;
+}
+
+.vp-doc .custom-block .custom-block-title {
+  font-family: var(--vp-font-family-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.vp-doc .custom-block.info,
+.vp-doc .custom-block.note {
+  border-left-color: var(--vp-c-text-3);
+  background: var(--vp-c-bg-soft);
+}
+
+.vp-doc .custom-block.tip,
+.vp-doc .custom-block.important {
+  border-left-color: var(--mm-accent);
+  background: var(--vp-c-brand-soft);
+}
+
+/* Warnings stand out by weight and a symbol, not by an alarm color. */
+.vp-doc .custom-block.warning {
+  border-color: var(--mm-line-strong);
+  border-left-color: var(--vp-c-text-1);
+  background: var(--vp-c-warning-soft);
+}
+
+.vp-doc .custom-block.danger,
+.vp-doc .custom-block.caution {
+  border-left-color: var(--vp-c-danger-1);
+}
+
+.vp-doc .custom-block.warning .custom-block-title::before,
+.vp-doc .custom-block.danger .custom-block-title::before,
+.vp-doc .custom-block.caution .custom-block-title::before {
+  content: '△ ';
+}
+
+.vp-doc .custom-block a {
+  color: var(--vp-c-brand-1);
+}
+
+.dark .vp-doc .custom-block.warning a,
+.vp-doc .custom-block.warning a {
+  color: inherit;
+  text-decoration-color: currentColor;
+}
+
+/* ---------- prev / next, footer, outline ---------- */
+
+.VPDocFooter .pager-link {
+  border-radius: 12px;
+}
+
+.VPDocFooter .pager-link .desc {
+  font-family: var(--vp-font-family-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.VPDocFooter .pager-link .title {
+  font-family: var(--mm-font-display);
+  font-size: 1.3rem;
+  font-weight: 400;
+}
+
+.VPDocAsideOutline .outline-title {
+  font-family: var(--vp-font-family-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--vp-c-text-2);
+}
+
+.VPFooter {
+  border-top: 1px solid var(--vp-c-divider) !important;
+  background: var(--vp-c-bg) !important;
+}
+
+.VPFooter .message,
+.VPFooter .copyright {
+  font-family: var(--vp-font-family-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+/* ---------- home content below the custom hero ---------- */
+
+.VPHome .vp-doc h2 {
+  font-size: clamp(2rem, 6vw, 2.9rem);
+  line-height: 1.08;
+  border-top: 0;
+}
+
+.VPHome .vp-doc .vp-doc {
+  max-width: none !important;
+  padding: 0 !important;
+}
+
+.VPHome .vp-doc h2 {
+  margin-top: 72px;
+}
+
+/* ---------- mermaid ---------- */
 
 .mermaid-diagram {
   display: flex;
   justify-content: center;
   margin: 24px 0;
+  padding: 20px 12px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 14px;
+  background:
+    radial-gradient(1px 1px at 1px 1px, var(--mm-grid) 1px, transparent 0) 0 0 / 18px 18px,
+    var(--vp-c-bg-soft);
   overflow-x: auto;
+}
+
+.mermaid-diagram:empty {
+  min-height: 120px;
 }
 
 .mermaid-diagram svg {
@@ -26,31 +478,48 @@
   height: auto;
 }
 
-.stack-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 12px;
-  margin: 16px 0 24px;
-}
-
-.stack-grid > div {
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 10px;
-  padding: 12px 14px;
-  background: var(--vp-c-bg-soft);
-}
-
-.stack-grid strong {
-  display: block;
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--vp-c-text-2);
-  margin-bottom: 4px;
-}
-
 /* Mermaid measures labels outside .vp-doc; undo the doc paragraph styles so they are not clipped. */
 .mermaid-diagram p {
   margin: 0;
   line-height: 24px;
+}
+
+/* ---------- "at a glance" grid ---------- */
+
+.stack-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+  gap: 1px;
+  margin: 20px 0 24px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--vp-c-divider);
+}
+
+.stack-grid > div {
+  padding: 18px 18px 20px;
+  background: var(--vp-c-bg);
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--vp-c-text-2);
+}
+
+.stack-grid strong {
+  display: block;
+  margin-bottom: 8px;
+  font-family: var(--vp-font-family-mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mm-accent-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
 }
