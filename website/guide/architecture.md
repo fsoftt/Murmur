@@ -18,7 +18,7 @@ flowchart TB
     Domain["Murmur.Domain<br/><i>Entities, use cases, outbox/ACK,<br/>state machine, ports</i>"]
     Server["Murmur.Signaling.Server<br/><i>ASP.NET Core + WebSockets</i>"] --> Protocol
 
-    classDef core fill:#1f6feb22,stroke:#1f6feb
+    classDef core fill:#5E8C7433,stroke:#5E8C74
     class Domain core
 ```
 

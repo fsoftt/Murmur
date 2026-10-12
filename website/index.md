@@ -1,13 +1,14 @@
 ---
 layout: home
 
-hero:
-  name: Murmur
-  text: Private messaging that doesn't need a server to store your conversations
+murmur:
+  eyebrow: Murmur · Noise_KK · peer-to-peer
+  text: Private messaging that doesn't need *a server* to store your conversations
   tagline: No accounts, no phone number, no email. You add contacts in person with a QR code, messages travel encrypted from phone to phone, and your history lives only on your devices.
-  image:
-    src: /favicon.svg
-    alt: Murmur
+  status:
+    label: Pre-alpha · unaudited
+    text: Don't use Murmur for sensitive communications until an independent security audit has taken place.
+    link: /guide/privacy
   actions:
     - theme: brand
       text: What is Murmur
@@ -18,33 +19,49 @@ hero:
     - theme: alt
       text: View the code on GitHub
       link: https://github.com/fsoftt/Murmur
-
-features:
-  - icon: 📱
-    title: Local-first
-    details: Your history and pending messages live in an encrypted database on your phone. No server keeps a copy.
-    link: /guide/life-of-a-message
-  - icon: 🔐
-    title: End-to-end encrypted with Noise
-    details: Every connection between two phones opens a fresh Noise_KK session with forward secrecy. Validated byte for byte against an independent implementation.
-    link: /concepts/noise
-  - icon: 🤝
-    title: QR pairing
-    details: A signed, single-use, expiring invitation. Each side saves the contact only if the handshake proves both identities.
-    link: /guide/pairing
-  - icon: 🕵️
-    title: Minimal metadata
-    details: The server only sees random topics that rotate daily. It doesn't know identities, names, or who talks to whom over time.
-    link: /concepts/rendezvous
-  - icon: ✅
-    title: Honest, reliable delivery
-    details: Local outbox, ACK after storing, idempotent receipt, retries with backoff, and ordering by Lamport clocks.
-    link: /concepts/outbox-and-acks
-  - icon: 🧪
-    title: Tested end to end
-    details: 120+ tests, including two full devices against the real server with network drops, restarts and unreachable peers.
-    link: /guide/testing
+  art: Two phones joined by an encrypted peer-to-peer line, paired in person with a QR code
+  cipher:
+    eyebrow: ChaCha20-Poly1305 · on the wire
+    from: Ana
+    to: Beto
+    plain: see you at the bakery at seven
+    caption: The server only helps them find each other. Messages go from phone to phone, and only the two ends can read them.
+  features:
+    eyebrow: Six properties
+    title: Quiet by design, honest about what it does
+    items:
+      - icon: device
+        eyebrow: SQLCipher · Keystore
+        title: Local-first
+        details: Your history and pending messages live in an encrypted database on your phone. No server keeps a copy.
+        link: /guide/life-of-a-message
+      - icon: handshake
+        eyebrow: Noise_KK · forward secrecy
+        title: End-to-end encrypted with Noise
+        details: Every connection between two phones opens a fresh Noise_KK session with forward secrecy. Validated byte for byte against an independent implementation.
+        link: /concepts/noise
+      - icon: qr
+        eyebrow: Signed · single-use · expiring
+        title: QR pairing
+        details: A signed, single-use, expiring invitation. Each side saves the contact only if the handshake proves both identities.
+        link: /guide/pairing
+      - icon: topics
+        eyebrow: Rotating topics
+        title: Minimal metadata
+        details: The server only sees random topics that rotate daily. It doesn't know identities, names, or who talks to whom over time.
+        link: /concepts/rendezvous
+      - icon: delivery
+        eyebrow: Outbox · ACK · Lamport
+        title: Honest, reliable delivery
+        details: Local outbox, ACK after storing, idempotent receipt, retries with backoff, and ordering by Lamport clocks.
+        link: /concepts/outbox-and-acks
+      - icon: tests
+        eyebrow: 120+ tests · real server
+        title: Tested end to end
+        details: 120+ tests, including two full devices against the real server with network drops, restarts and unreachable peers.
+        link: /guide/testing
 ---
+
 
 <div class="vp-doc" style="max-width: 1152px; margin: 64px auto 0; padding: 0 24px;">
 
